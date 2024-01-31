@@ -4,6 +4,7 @@
 #include "LobbyGameMode.h"
 
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerState.h"
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {

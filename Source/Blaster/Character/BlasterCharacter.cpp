@@ -4,6 +4,7 @@
 #include "BlasterCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -25,6 +26,9 @@ ABlasterCharacter::ABlasterCharacter()
 	// 设置Controller如何影响Character的朝向
 	bUseControllerRotationYaw = false; // 如果是true，那么角色会持续朝向control的Yaw朝向
 	GetCharacterMovement()->bOrientRotationToMovement = true; // 使用rotateRate去转向朝向
+
+	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverHeadWidget"));
+	WidgetComponent->SetupAttachment(RootComponent);
 }
 
 void ABlasterCharacter::BeginPlay()
