@@ -31,5 +31,5 @@ private:
 	void ShowNetRole(APawn* InPawn);
 
 	UFUNCTION(BlueprintCallable)
-	void ShowPlayerName(APlayerController* PlayerController);
+	void ShowPlayerName(APawn* InPawn);
 };

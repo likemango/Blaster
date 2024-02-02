@@ -76,13 +76,18 @@ void UOverHeadWidget::ShowNetRole(APawn* InPawn)
 	}
 }
 
-void UOverHeadWidget::ShowPlayerName(APlayerController* PlayerController)
+void UOverHeadWidget::ShowPlayerName(APawn* InPawn)
 {
-	APlayerState* PlayerState = PlayerController->PlayerState.Get();
+	APlayerState* PlayerState = InPawn->GetPlayerState();
 	FString ShowPlayNameText = FString(TEXT("PlayerName: "));
 	if(PlayerState)
 	{
 		FString PlayerName = PlayerState->GetPlayerName();
+		ShowPlayNameText = FString(TEXT("PlayerName: ")).Append(PlayerName);
+	}
+	else
+	{
+		FString PlayerName = FString(TEXT("No Ready!"));
 		ShowPlayNameText = FString(TEXT("PlayerName: ")).Append(PlayerName);
 	}
 	if(DisplayText)
