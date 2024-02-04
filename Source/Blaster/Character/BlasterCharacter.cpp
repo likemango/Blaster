@@ -3,6 +3,7 @@
 
 #include "BlasterCharacter.h"
 
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
@@ -31,6 +32,9 @@ ABlasterCharacter::ABlasterCharacter()
 
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverHeadWidget"));
 	WidgetComponent->SetupAttachment(RootComponent);
+	
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	Combat->SetIsReplicated(true);
 }
 
 void ABlasterCharacter::BeginPlay()
@@ -51,6 +55,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	// 这些bing是给到Controller的，至于controller如何影响Character，还需要另外设置
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ThisClass::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ThisClass::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &ThisClass::Turn);
@@ -61,7 +66,16 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlapWeapon, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
+}
+
+void ABlasterCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (Combat)
+	{
+		Combat->Character = this;
+	}
 }
 
 void ABlasterCharacter::MoveForward(float Value)
@@ -100,30 +114,38 @@ void ABlasterCharacter::LookUp(float Value)
 	AddControllerPitchInput(Value);
 }
 
+void ABlasterCharacter::EquipButtonPressed()
+{
+	if (Combat && HasAuthority())
+	{
+		Combat->EquipWeapon(OverlappingWeapon);
+	}
+}
+
 void ABlasterCharacter::OnRep_OverlapWeapon(AWeapon* LastWeapon)
 {
 	if(LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
 	}
-	if(OverlapWeapon)
+	if(OverlappingWeapon)
 	{
-		OverlapWeapon->ShowPickupWidget(true);
+		OverlappingWeapon->ShowPickupWidget(true);
 	}
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
-	if(OverlapWeapon)
+	if(OverlappingWeapon)
 	{
-		OverlapWeapon->ShowPickupWidget(false);
+		OverlappingWeapon->ShowPickupWidget(false);
 	}
-	OverlapWeapon = Weapon;
+	OverlappingWeapon = Weapon;
 	if(IsLocallyControlled())
 	{
-		if(OverlapWeapon)
+		if(OverlappingWeapon)
 		{
-			OverlapWeapon->ShowPickupWidget(true);
+			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}	
 }

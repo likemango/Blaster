@@ -52,4 +52,5 @@ private:
 	EWeaponState WeaponState;
 	
 public:
+	FORCEINLINE void SetWeaponState(EWeaponState State) { WeaponState = State; }
 };
