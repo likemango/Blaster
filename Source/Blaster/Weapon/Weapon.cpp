@@ -38,12 +38,35 @@ AWeapon::AWeapon()
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
+	/*ENetRole LocalRole = GetLocalRole();
+	FString RoleName;
+	switch (LocalRole)
+	{
+	case ENetRole::ROLE_Authority:
+		RoleName = FString("Authority");
+		break;
+	case ENetRole::ROLE_AutonomousProxy:
+		RoleName = FString("Autonomous Proxy");
+		break;
+	case ENetRole::ROLE_SimulatedProxy:
+		RoleName = FString("Simulated Proxy");
+		break;
+	case ENetRole::ROLE_None:
+		RoleName = FString("None");
+		break;
+	default:
+		break;
+	}
+	
+	UE_LOG(LogTemp, Error, TEXT("WeaponRule: %s"), *RoleName);*/
+	
 	if(HasAuthority())
 	{
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		AreaSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
+		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnSphereEndOverlap);
 	}
 	if(PickupWidget)
 	{
@@ -54,14 +77,28 @@ void AWeapon::BeginPlay()
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// FString OverLappedComponentActorName = OverLappedComponent->GetOwner()->GetActorNameOrLabel();
-	// FString OtherComponentActorName = OtherComp->GetOwner()->GetActorNameOrLabel();
-	// UE_LOG(LogTemp, Warning, TEXT("OverLappedComponentActorName: %s /n OtherComponentActorName: %s"), *OverLappedComponentActorName, *OtherComponentActorName);
-	
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if(BlasterCharacter && PickupWidget)
+	if(BlasterCharacter)
 	{
-		PickupWidget->SetVisibility(true);
+		BlasterCharacter->SetOverlappingWeapon(this);
+	}
+}
+
+void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(BlasterCharacter)
+	{
+		BlasterCharacter->SetOverlappingWeapon(nullptr);
+	}
+}
+
+void AWeapon::ShowPickupWidget(bool bShow)
+{
+	if(PickupWidget)
+	{
+		PickupWidget->SetVisibility(bShow);
 	}
 }
 
