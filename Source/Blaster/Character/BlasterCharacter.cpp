@@ -35,6 +35,8 @@ ABlasterCharacter::ABlasterCharacter()
 	
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 void ABlasterCharacter::BeginPlay()
@@ -55,11 +57,13 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	// 这些bing是给到Controller的，至于controller如何影响Character，还需要另外设置
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ThisClass::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ThisClass::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &ThisClass::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &ThisClass::LookUp);
+
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ThisClass::CrouchPressed);
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -126,6 +130,18 @@ void ABlasterCharacter::EquipButtonPressed()
 		{
 			ServerEquipButtonPressed();
 		}
+	}
+}
+
+void ABlasterCharacter::CrouchPressed()
+{
+	if(!bIsCrouched)
+	{
+		Crouch();
+	}
+	else
+	{
+		UnCrouch();
 	}
 }
 
