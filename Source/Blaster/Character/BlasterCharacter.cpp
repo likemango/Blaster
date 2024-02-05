@@ -122,7 +122,7 @@ void ABlasterCharacter::EquipButtonPressed()
 	}
 }
 
-void ABlasterCharacter::OnRep_OverlapWeapon(AWeapon* LastWeapon)
+void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if(LastWeapon)
 	{
