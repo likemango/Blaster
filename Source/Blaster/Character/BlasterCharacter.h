@@ -52,6 +52,7 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsEquippedWeapon();

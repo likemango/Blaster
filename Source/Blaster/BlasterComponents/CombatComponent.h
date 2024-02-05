@@ -27,6 +27,10 @@ protected:
 
 	
 public:
+	void SetIsAiming(bool bIsAim);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsAiming(bool bIsAim);
 
 private:
 	class ABlasterCharacter* Character;

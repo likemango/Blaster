@@ -21,6 +21,17 @@ void UCombatComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
+void UCombatComponent::SetIsAiming(bool bIsAim)
+{
+	bIsAiming = bIsAim;
+	Server_SetIsAiming(bIsAim);
+}
+
+void UCombatComponent::Server_SetIsAiming_Implementation(bool bIsAim)
+{
+	bIsAiming = bIsAim;
+}
+
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                      FActorComponentTickFunction* ThisTickFunction)
 {
