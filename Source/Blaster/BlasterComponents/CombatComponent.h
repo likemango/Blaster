@@ -17,6 +17,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction) override;
 	
 	friend class ABlasterCharacter;
+	// always called from server
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 	
 protected:

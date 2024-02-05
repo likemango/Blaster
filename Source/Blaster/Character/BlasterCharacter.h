@@ -43,6 +43,12 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
+	// RPC(remote process call, client call server to execute)
+	// reliable: if failed, it will send again to make sure it received. Use it sparing.
+	// unreliable: if failed, failed.
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 };
