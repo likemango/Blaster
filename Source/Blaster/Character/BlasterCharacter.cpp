@@ -64,6 +64,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ThisClass::CrouchPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ThisClass::AimPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ThisClass::AimReleased);
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -145,6 +147,22 @@ void ABlasterCharacter::CrouchPressed()
 	}
 }
 
+void ABlasterCharacter::AimPressed()
+{
+	if(Combat)
+	{
+		Combat->bIsAiming = true;
+	}
+}
+
+void ABlasterCharacter::AimReleased()
+{
+	if(Combat)
+	{
+		Combat->bIsAiming = false;
+	}
+}
+
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if(LastWeapon)
@@ -185,6 +203,11 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 bool ABlasterCharacter::IsEquippedWeapon()
 {
 	return Combat && Combat->EquippedWeapon;
+}
+
+bool ABlasterCharacter::IsAiming()
+{
+	return Combat && Combat->bIsAiming;
 }
 
 
