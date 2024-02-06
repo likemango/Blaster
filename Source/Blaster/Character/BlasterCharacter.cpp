@@ -174,23 +174,33 @@ void ABlasterCharacter::CalculateAimOffset(float DeltaTime)
 	if(!Combat || Combat->EquippedWeapon == nullptr)
 		return;
 	
-	FVector Speed = GetVelocity();
-	Speed.Z = 0;
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0;
+	float Speed = Velocity.Size();
 	bool bInAir = GetCharacterMovement()->IsFalling();
-	if(Speed.Size() == 0.f && !bInAir)
+	
+	if(Speed == 0.f && !bInAir) // standing still, not jumping
 	{
 		FRotator CurrentRotator = FRotator(0, GetBaseAimRotation().Yaw, 0);
-		float DeltaYaw = UKismetMathLibrary::NormalizedDeltaRotator(CurrentRotator, LastAimingRotator).Yaw;
-		AO_Yaw = DeltaYaw;
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentRotator, LastAimingRotator);
+		AO_Yaw = DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw = false;
 	}
-	if(Speed.Size() > 0 || bInAir) // moving or jumping
+	if(Speed > 0 || bInAir) // moving or jumping
 	{
 		LastAimingRotator = FRotator(0, GetBaseAimRotation().Yaw, 0);
 		AO_Yaw = 0;
 		bUseControllerRotationYaw = true;
 	}
 	AO_Pitch = GetBaseAimRotation().Pitch;
+	if(AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		// Map InRange to OutRange, Because the Rotation package has been packaged from float to uint16.
+		// (0, 90) - (0, 90)  (-90, 0) - (270, 360)
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
 }
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
