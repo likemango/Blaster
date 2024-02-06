@@ -19,7 +19,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
-	// always called from server
+	// only execute on the server
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 	
 protected:
@@ -32,10 +32,13 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_SetIsAiming(bool bIsAim);
 
+	UFUNCTION()
+	void OnRep_EquipWeapon();
+	
 private:
 	class ABlasterCharacter* Character;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_EquipWeapon)
 	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated)
