@@ -10,6 +10,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -51,6 +52,8 @@ void ABlasterCharacter::BeginPlay()
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	CalculateAimOffset(DeltaTime);
 }
 
 
@@ -164,6 +167,30 @@ void ABlasterCharacter::AimReleased()
 	{
 		Combat->SetIsAiming(false);
 	}
+}
+
+void ABlasterCharacter::CalculateAimOffset(float DeltaTime)
+{
+	if(!Combat || Combat->EquippedWeapon == nullptr)
+		return;
+	
+	FVector Speed = GetVelocity();
+	Speed.Z = 0;
+	bool bInAir = GetCharacterMovement()->IsFalling();
+	if(Speed.Size() == 0.f && !bInAir)
+	{
+		FRotator CurrentRotator = FRotator(0, GetBaseAimRotation().Yaw, 0);
+		float DeltaYaw = UKismetMathLibrary::NormalizedDeltaRotator(CurrentRotator, LastAimingRotator).Yaw;
+		AO_Yaw = DeltaYaw;
+		bUseControllerRotationYaw = false;
+	}
+	if(Speed.Size() > 0 || bInAir) // moving or jumping
+	{
+		LastAimingRotator = FRotator(0, GetBaseAimRotation().Yaw, 0);
+		AO_Yaw = 0;
+		bUseControllerRotationYaw = true;
+	}
+	AO_Pitch = GetBaseAimRotation().Pitch;
 }
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
