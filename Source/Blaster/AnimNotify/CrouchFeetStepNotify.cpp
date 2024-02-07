@@ -18,6 +18,6 @@ void UCrouchFeetStepNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequen
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(MeshComp->GetOwner());
 	if(BlasterCharacter && BlasterCharacter->IsLocallyControlled())
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), CrouchFeetStepSoundWave, BlasterCharacter->GetActorLocation());
+		UGameplayStatics::PlaySound2D(GetWorld(), CrouchFeetStepSoundWave, 0.3);
 	}
 }
