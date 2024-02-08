@@ -3,6 +3,7 @@
 
 #include "BlasterCharacter.h"
 
+#include "BlasterAnimInstance.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
@@ -80,6 +81,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ThisClass::CrouchReleased);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ThisClass::AimPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ThisClass::AimReleased);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ThisClass::FirePressed);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ThisClass::FireReleased);
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -97,6 +100,19 @@ void ABlasterCharacter::PostInitializeComponents()
 		Combat->Character = this;
 	}
 }
+
+void ABlasterCharacter::PlayFireMontage(bool bAiming)
+{
+	if(!Combat || !Combat->EquippedWeapon) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+} 
 
 void ABlasterCharacter::MoveForward(float Value)
 {
@@ -233,6 +249,22 @@ void ABlasterCharacter::Jump()
 	}
 }
 
+void ABlasterCharacter::FirePressed()
+{
+	if(Combat)
+	{
+		Combat->FireButtonPressed(true);
+	}
+}
+
+void ABlasterCharacter::FireReleased()
+{
+	if(Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
+}
+
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if(LastWeapon)
@@ -255,7 +287,7 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 
 void ABlasterCharacter::SetTurningInPlaceType(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("AimOffset Yaw: %s"), *FString::SanitizeFloat(AO_Yaw));
+	// UE_LOG(LogTemp, Warning, TEXT("AimOffset Yaw: %s"), *FString::SanitizeFloat(AO_Yaw));
 	if(AO_Yaw > 90.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;

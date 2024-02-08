@@ -28,7 +28,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShow);
-
+	void Fire();
 protected:
 	virtual void BeginPlay() override;
 
@@ -54,6 +54,9 @@ private:
 
 	UFUNCTION()
 	void OnRep_WeaponState();
+
+	UPROPERTY(EditAnywhere)
+	UAnimationAsset* FireAnimation;
 	
 public:
 	// it calls from server, so always has authority!

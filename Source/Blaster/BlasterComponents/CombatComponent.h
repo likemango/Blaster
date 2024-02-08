@@ -25,8 +25,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	
-public:
 	void SetIsAiming(bool bIsAim);
 
 	UFUNCTION(Server, Reliable)
@@ -34,6 +32,14 @@ public:
 
 	UFUNCTION()
 	void OnRep_EquipWeapon();
+
+	void FireButtonPressed(bool bPressed);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerFire();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFire();
 	
 private:
 	class ABlasterCharacter* Character;
@@ -48,5 +54,6 @@ private:
 	float BaseWalkSpeed;
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
-	
+
+	bool bFireButtonPressed;
 };
