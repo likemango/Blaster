@@ -77,6 +77,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ThisClass::CrouchPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ThisClass::CrouchReleased);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ThisClass::AimPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ThisClass::AimReleased);
 }
@@ -154,7 +155,11 @@ void ABlasterCharacter::CrouchPressed()
 	{
 		Crouch();
 	}
-	else
+}
+
+void ABlasterCharacter::CrouchReleased()
+{
+	if(bIsCrouched)
 	{
 		UnCrouch();
 	}

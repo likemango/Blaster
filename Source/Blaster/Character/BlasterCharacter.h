@@ -28,6 +28,7 @@ protected:
 	void LookUp(float Value);
 	void EquipButtonPressed();
 	void CrouchPressed();
+	void CrouchReleased();
 	void AimPressed();
 	void AimReleased();
 	void CalculateAimOffset(float DeltaTime);
