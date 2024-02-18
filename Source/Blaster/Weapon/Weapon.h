@@ -57,6 +57,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UAnimationAsset* FireAnimation;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class ACasing> CasingClass;
 	
 public:
 	// it calls from server, so always has authority!
