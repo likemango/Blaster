@@ -5,11 +5,13 @@
 
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
 	SetRootComponent(BoxComponent);
@@ -27,7 +29,18 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if(ParticleSystem)
+	{
+		ParticleSystemComponent = UGameplayStatics::SpawnEmitterAttached(
+				ParticleSystem,
+				BoxComponent,
+				FName(),
+				GetActorLocation(),
+				GetActorRotation(),
+				EAttachLocation::KeepWorldPosition
+			);
+	}
 }
 
 void AProjectile::Tick(float DeltaTime)

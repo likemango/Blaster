@@ -18,10 +18,13 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* BoxComponent;
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
-	
-public:
+
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* ParticleSystem;
+
+	class UParticleSystemComponent* ParticleSystemComponent;
 };
