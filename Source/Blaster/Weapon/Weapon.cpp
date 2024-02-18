@@ -115,7 +115,7 @@ void AWeapon::ShowPickupWidget(bool bShow)
 	}
 }
 
-void AWeapon::Fire()
+void AWeapon::Fire(const FVector& HitTarget)
 {
 	if(WeaponMesh)
 	{

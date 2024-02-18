@@ -18,6 +18,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere)
 	class UBoxComponent* BoxComponent;
 	
 public:

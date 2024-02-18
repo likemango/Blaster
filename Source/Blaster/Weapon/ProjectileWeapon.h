@@ -7,17 +7,17 @@
 #include "GameFramework/Actor.h"
 #include "ProjectileWeapon.generated.h"
 
+class AProjectile;
+
 UCLASS()
 class BLASTER_API AProjectileWeapon : public AWeapon
 {
 	GENERATED_BODY()
 
-public:
-	AProjectileWeapon();
-	virtual void Tick(float DeltaTime) override;
-
 protected:
-	virtual void BeginPlay() override;
+	virtual void Fire(const FVector& HitTarget) override;
 
-public:
+private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AProjectile> ProjectileClass;
 };
