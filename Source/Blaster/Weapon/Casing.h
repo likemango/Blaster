@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Casing.generated.h"
 
+class USoundCue;
+
 UCLASS()
 class BLASTER_API ACasing : public AActor
 {
@@ -16,9 +18,21 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
+	UFUNCTION()
+	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,FVector NormalImpulse, const FHitResult& Hit);
 
 private:
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* CasingStaticMeshComponent;
-	
+	UStaticMeshComponent* CasingMeshComp;
+
+	UPROPERTY(EditAnywhere)
+	float ShellEjectionImpulse;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* ShellSoundCue;
+
+	void DestroyActor();
+	FTimerHandle DestroyTimerHandle;
+	bool bShellHitGround;
 };
