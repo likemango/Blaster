@@ -45,6 +45,7 @@ protected:
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairs(float DeltaTime);
+
 	
 private:
 	class ABlasterCharacter* Character;
@@ -68,4 +69,13 @@ private:
 	float CrosshairInAirFactory;
 
 	FVector LocallyHitTarget;
+	
+	// Aiming and FOV
+	// Field of view when not aiming; set to the camera's base FOV in BeginPlay
+	float DefaultFOV;
+	float CurrentFOV;
+	// When not zoom, interp back to default FOV. Same for all weapon.
+	UPROPERTY(EditAnywhere)
+	float ZoomOffInterpSpeed = 20.f;
+	void InterpFOV(float DeltaTime);
 };

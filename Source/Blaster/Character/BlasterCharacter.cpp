@@ -112,7 +112,16 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
-} 
+}
+
+FVector ABlasterCharacter::GetHitTarget() const
+{
+	if(!Combat)
+	{
+		return FVector();
+	}
+	return Combat->LocallyHitTarget;
+}
 
 void ABlasterCharacter::MoveForward(float Value)
 {

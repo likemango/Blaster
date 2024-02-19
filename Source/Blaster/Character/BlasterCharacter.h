@@ -20,6 +20,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	FVector GetHitTarget() const;
 protected:
 	virtual void BeginPlay() override;
 	
@@ -77,13 +78,6 @@ public:
 	AWeapon* GetEquippedWeapon() const;
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw;}
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch;}
-	FORCEINLINE ETurningInPlace GetTurningInPlace(){ return TurningInPlace;}
-	FORCEINLINE FVector GetHitTarget()
-	{
-		if(Combat)
-		{
-			return Combat->LocallyHitTarget;
-		}
-		return FVector();
-	}
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace;}
+	FORCEINLINE UCameraComponent* GetCamera() const { return FollowCamera;}
 };

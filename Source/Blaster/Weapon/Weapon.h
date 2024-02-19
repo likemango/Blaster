@@ -77,11 +77,19 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV = 30.f;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed = 20.f;
 	
 public:
 	// it calls from server, so always has authority!
 	void SetWeaponState(EWeaponState NewState);
 	
-	FORCEINLINE USphereComponent* GetAreaSphere() { return AreaSphere;}
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() { return WeaponMesh; }
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere;}
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh;}
+	FORCEINLINE float GetAimFOV() const { return ZoomedFOV;}
+	FORCEINLINE float GetAimChangeSpeed() const {return ZoomInterpSpeed;}
 };
