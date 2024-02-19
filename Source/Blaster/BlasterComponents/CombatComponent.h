@@ -66,4 +66,6 @@ private:
 
 	float CrosshairVelocityFactory;
 	float CrosshairInAirFactory;
+
+	FVector LocallyHitTarget;
 };

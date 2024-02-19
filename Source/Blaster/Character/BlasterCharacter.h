@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
@@ -77,4 +78,12 @@ public:
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw;}
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch;}
 	FORCEINLINE ETurningInPlace GetTurningInPlace(){ return TurningInPlace;}
+	FORCEINLINE FVector GetHitTarget()
+	{
+		if(Combat)
+		{
+			return Combat->LocallyHitTarget;
+		}
+		return FVector();
+	}
 };
