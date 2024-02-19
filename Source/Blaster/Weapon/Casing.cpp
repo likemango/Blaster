@@ -38,8 +38,6 @@ void ACasing::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrim
 
 		// 调用定时器函数，在2秒后执行销毁Actor的函数
 		GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ThisClass::DestroyActor, 2.0f, false);
-		
-		UE_LOG(LogTemp, Warning, TEXT("Calling!!!"));
 	}
 }
 
