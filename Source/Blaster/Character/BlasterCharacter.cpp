@@ -4,6 +4,7 @@
 #include "BlasterCharacter.h"
 
 #include "BlasterAnimInstance.h"
+#include "Blaster/Blaster.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
@@ -41,6 +42,7 @@ ABlasterCharacter::ABlasterCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
@@ -112,6 +114,24 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABlasterCharacter::MulticastHit_Implementation()
+{
+	PlayHitReactMontage();
+}
+
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	if(!Combat || !Combat->EquippedWeapon) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
@@ -311,8 +331,10 @@ void ABlasterCharacter::SetTurningInPlaceType(float DeltaTime)
 	{
 		InterpAO_Yaw = FMath::FInterpTo(InterpAO_Yaw, 0.f, DeltaTime, 4.f);
 		AO_Yaw = InterpAO_Yaw;
+		UE_LOG(LogTemp, Log, TEXT("AO_YA_Interp: %s"), *FString::SanitizeFloat(AO_Yaw))
 		if(FMath::Abs(AO_Yaw) < 15.f)
 		{
+			UE_LOG(LogTemp, Log, TEXT("FinishTurning: %s"), *FString::SanitizeFloat(AO_Yaw))
 			TurningInPlace = ETurningInPlace::ETIP_NotTuring;
 			LastAimingRotator = FRotator(0, GetBaseAimRotation().Yaw, 0);
 		}
