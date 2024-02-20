@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/HUD/BlasterHUD.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
@@ -65,11 +66,12 @@ private:
 
 	bool bFireButtonPressed;
 
+	// Crosshair
 	float CrosshairVelocityFactory;
 	float CrosshairInAirFactory;
 	float CrosshairAimFactory;
 	float CrosshairShootingFactory;
-
+	FHUDPackage HUDPackage;
 	FVector LocallyHitTarget;
 	
 	// Aiming and FOV
