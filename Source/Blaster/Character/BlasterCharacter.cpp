@@ -63,6 +63,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	CalculateAimOffset(DeltaTime);
+	HideCameraIfCharacterClose();
 }
 
 
@@ -314,6 +315,31 @@ void ABlasterCharacter::SetTurningInPlaceType(float DeltaTime)
 		{
 			TurningInPlace = ETurningInPlace::ETIP_NotTuring;
 			LastAimingRotator = FRotator(0, GetBaseAimRotation().Yaw, 0);
+		}
+	}
+}
+
+void ABlasterCharacter::HideCameraIfCharacterClose()
+{
+	if(!IsLocallyControlled()) return;
+
+	float DistanceToCamera = (FollowCamera->GetComponentLocation() - GetActorLocation()).Size();
+	if(DistanceToCamera < CameraHideDistance)
+	{
+		GetMesh()->SetVisibility(false);
+		if(Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			// 这使得该component的Owner无法看到该component
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if(Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			// 这使得该component的Owner无法看到该component
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
