@@ -69,6 +69,12 @@ private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_WeaponState)
 	EWeaponState WeaponState;
 
+	UPROPERTY(EditAnywhere, Category=Combat)
+	bool bAutomatic = true;
+
+	UPROPERTY(EditAnywhere, Category=Combat)
+	float FireInterval = 0.1f;
+
 	UFUNCTION()
 	void OnRep_WeaponState();
 
@@ -92,4 +98,6 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh;}
 	FORCEINLINE float GetAimFOV() const { return ZoomedFOV;}
 	FORCEINLINE float GetAimChangeSpeed() const {return ZoomInterpSpeed;}
+	FORCEINLINE bool IsAutomatic() const { return bAutomatic;}
+	FORCEINLINE float GetFireInterval() const { return FireInterval;}
 };

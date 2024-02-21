@@ -45,7 +45,6 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,FActor
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-
 	if(Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
@@ -118,6 +117,29 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 	}
 }
 
+void UCombatComponent::StartFireTimer()
+{
+	if(!Character || !EquippedWeapon) return;
+
+	Character->GetWorldTimerManager().SetTimer(
+		FireTimerHandle,
+		this,
+		&ThisClass::OnFireTimerFinished,
+		EquippedWeapon->GetFireInterval()
+	);
+}
+
+void UCombatComponent::OnFireTimerFinished()
+{
+	if(!EquippedWeapon) return;
+	
+	bCanFire = true;
+	if(bFireButtonPressed && EquippedWeapon->IsAutomatic())
+	{
+		Fire();
+	}
+}
+
 void UCombatComponent::InterpFOV(float DeltaTime)
 {
 	if(!EquippedWeapon || !Character) return;
@@ -161,19 +183,25 @@ void UCombatComponent::OnRep_EquipWeapon()
 	}
 }
 
+void UCombatComponent::Fire()
+{
+	if(bCanFire)
+	{
+		ServerFire(LocallyHitTarget);
+		StartFireTimer();
+		if(EquippedWeapon)
+		{
+			CrosshairShootingFactory = 0.75f;
+		}
+	}
+}
+
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
 	bFireButtonPressed = bPressed;
 	if(bFireButtonPressed)
 	{
-		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult);
-		ServerFire(HitResult.ImpactPoint);
-
-		if(EquippedWeapon)
-		{
-			CrosshairShootingFactory = 0.75f;
-		}
+		Fire();
 	}
 }
 
@@ -233,6 +261,8 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& H
 {
 	if(!EquippedWeapon)
 		return;
+	
+	bCanFire = false;
 	if(Character)
 	{
 		// character montage

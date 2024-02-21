@@ -34,6 +34,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquipWeapon();
+	void Fire();
 
 	void FireButtonPressed(bool bPressed);
 	
@@ -72,7 +73,13 @@ private:
 	float CrosshairAimFactory;
 	float CrosshairShootingFactory;
 	FHUDPackage HUDPackage;
-	FVector LocallyHitTarget;
+	FVector_NetQuantize LocallyHitTarget;
+
+	// Automatic fire
+	FTimerHandle FireTimerHandle;
+	bool bCanFire = true;
+	void StartFireTimer();
+	void OnFireTimerFinished();
 	
 	// Aiming and FOV
 	// Field of view when not aiming; set to the camera's base FOV in BeginPlay
