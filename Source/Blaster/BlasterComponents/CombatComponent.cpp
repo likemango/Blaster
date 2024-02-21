@@ -21,14 +21,6 @@ UCombatComponent::UCombatComponent()
 	AimWalkSpeed = 400.f;
 }
 
-void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
-	DOREPLIFETIME(UCombatComponent, bIsAiming);
-}
-
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -39,6 +31,14 @@ void UCombatComponent::BeginPlay()
 		DefaultFOV = Character->GetCamera()->FieldOfView;
 		CurrentFOV = DefaultFOV;
 	}
+}
+
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, bIsAiming);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction)
@@ -55,7 +55,6 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,FActor
 		InterpFOV(DeltaTime);
 	}
 }
-
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
 	if(Character == nullptr || Character->Controller == nullptr) return;
@@ -116,30 +115,6 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 		}
 	}
 }
-
-void UCombatComponent::StartFireTimer()
-{
-	if(!Character || !EquippedWeapon) return;
-
-	Character->GetWorldTimerManager().SetTimer(
-		FireTimerHandle,
-		this,
-		&ThisClass::OnFireTimerFinished,
-		EquippedWeapon->GetFireInterval()
-	);
-}
-
-void UCombatComponent::OnFireTimerFinished()
-{
-	if(!EquippedWeapon) return;
-	
-	bCanFire = true;
-	if(bFireButtonPressed && EquippedWeapon->IsAutomatic())
-	{
-		Fire();
-	}
-}
-
 void UCombatComponent::InterpFOV(float DeltaTime)
 {
 	if(!EquippedWeapon || !Character) return;
@@ -154,57 +129,6 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 	}
 	Character->GetCamera()->SetFieldOfView(CurrentFOV);
 }
-
-void UCombatComponent::SetIsAiming(bool bIsAim)
-{
-	bIsAiming = bIsAim;
-	Server_SetIsAiming(bIsAim);
-	if(Character)
-	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-	}
-}
-
-void UCombatComponent::Server_SetIsAiming_Implementation(bool bIsAim)
-{
-	bIsAiming = bIsAim;
-	if(Character)
-	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-	}
-}
-
-void UCombatComponent::OnRep_EquipWeapon()
-{
-	if(EquippedWeapon && Character)
-	{
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;
-	}
-}
-
-void UCombatComponent::Fire()
-{
-	if(bCanFire)
-	{
-		ServerFire(LocallyHitTarget);
-		StartFireTimer();
-		if(EquippedWeapon)
-		{
-			CrosshairShootingFactory = 0.75f;
-		}
-	}
-}
-
-void UCombatComponent::FireButtonPressed(bool bPressed)
-{
-	bFireButtonPressed = bPressed;
-	if(bFireButtonPressed)
-	{
-		Fire();
-	}
-}
-
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 {
 	FVector2D ViewportSize;
@@ -252,11 +176,51 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 }
 
+void UCombatComponent::FireButtonPressed(bool bPressed)
+{
+	bFireButtonPressed = bPressed;
+	if(bFireButtonPressed)
+	{
+		Fire();
+	}
+}
+void UCombatComponent::Fire()
+{
+	if(bCanFire)
+	{
+		ServerFire(LocallyHitTarget);
+		StartFireTimer();
+		if(EquippedWeapon)
+		{
+			CrosshairShootingFactory = 0.75f;
+		}
+	}
+}
+void UCombatComponent::StartFireTimer()
+{
+	if(!Character || !EquippedWeapon) return;
+
+	Character->GetWorldTimerManager().SetTimer(
+		FireTimerHandle,
+		this,
+		&ThisClass::OnFireTimerFinished,
+		EquippedWeapon->GetFireInterval()
+	);
+}
+void UCombatComponent::OnFireTimerFinished()
+{
+	if(!EquippedWeapon) return;
+	
+	bCanFire = true;
+	if(bFireButtonPressed && EquippedWeapon->IsAutomatic())
+	{
+		Fire();
+	}
+}
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& HitTarget)
 {
 	MulticastFire(HitTarget);
 }
-
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& HitTarget)
 {
 	if(!EquippedWeapon)
@@ -269,6 +233,24 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& H
 		Character->PlayFireMontage(bIsAiming);
 		// weapon fire animation
 		EquippedWeapon->Fire(HitTarget);
+	}
+}
+
+void UCombatComponent::SetIsAiming(bool bIsAim)
+{
+	bIsAiming = bIsAim;
+	Server_SetIsAiming(bIsAim);
+	if(Character)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	}
+}
+void UCombatComponent::Server_SetIsAiming_Implementation(bool bIsAim)
+{
+	bIsAiming = bIsAim;
+	if(Character)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
 }
 
@@ -287,4 +269,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
-
+void UCombatComponent::OnRep_EquipWeapon()
+{
+	if(EquippedWeapon && Character)
+	{
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+	}
+}
