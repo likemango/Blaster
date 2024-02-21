@@ -83,4 +83,6 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	TurningInPlace = BlasterCharacter->GetTurningInPlace();
+
+	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 }
