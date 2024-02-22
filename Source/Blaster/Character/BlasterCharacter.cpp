@@ -64,14 +64,24 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterCharacter, Health);
 }
 
-void ABlasterCharacter::BeginPlay()
+void ABlasterCharacter::UpdateHealthHUD()
 {
-	Super::BeginPlay();
-
 	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
 	if(BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+}
+
+void ABlasterCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UpdateHealthHUD();
+
+	if(HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
 	}
 }
 
@@ -140,7 +150,6 @@ void ABlasterCharacter::CalculateAO_Pitch()
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
 }
-
 /*
  * 旋转根骨骼，当Yaw_Offset到90度时进行lerp到0，重新指向瞄准方向 
  */
@@ -182,7 +191,6 @@ void ABlasterCharacter::CalculateAimOffset(float DeltaTime)
 	}
 	CalculateAO_Pitch();
 }
-
 /*
  * 不旋转根骨骼，只是当存在旋转变化时播放转向动画，角色骨骼模型始终指向目标
  */
@@ -407,8 +415,15 @@ FVector ABlasterCharacter::GetHitTarget() const
 	}
 	return Combat->LocallyHitTarget;
 }
-void ABlasterCharacter::MulticastHit_Implementation()
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
+	Health = FMath::Clamp(Health-Damage, 0, MaxHealth);
+	UpdateHealthHUD();
+	PlayHitReactMontage();
+}
+void ABlasterCharacter::OnRep_Health()
+{
+	UpdateHealthHUD();
 	PlayHitReactMontage();
 }
 
@@ -445,11 +460,6 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	{
 		Combat->EquipWeapon(OverlappingWeapon);
 	}
-}
-
-void ABlasterCharacter::OnRep_Health()
-{
-	
 }
 
 float ABlasterCharacter::CalculateSpeed() const

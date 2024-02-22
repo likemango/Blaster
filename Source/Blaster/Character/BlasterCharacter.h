@@ -19,11 +19,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void UpdateHealthHUD();
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 	
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
 	FVector GetHitTarget() const;
 	virtual void OnRep_ReplicatedMovement() override;
 
@@ -104,6 +103,9 @@ private:
 	void OnRep_Health();
 
 	class ABlasterPlayerController* BlasterPlayerController;
+
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

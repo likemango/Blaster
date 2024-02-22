@@ -39,4 +39,7 @@ protected:
 	class USoundCue* HitSoundCue;
 
 	class UParticleSystemComponent* ParticleSystemComponent;
+
+	UPROPERTY(EditAnywhere)
+	float DamageValue = 20.f;
 };
