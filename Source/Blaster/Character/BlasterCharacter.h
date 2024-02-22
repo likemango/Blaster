@@ -102,6 +102,8 @@ private:
 	float Health = 100.f;
 	UFUNCTION()
 	void OnRep_Health();
+
+	class ABlasterPlayerController* BlasterPlayerController;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
