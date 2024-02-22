@@ -25,6 +25,7 @@ public:
 	
 	FVector GetHitTarget() const;
 	virtual void OnRep_ReplicatedMovement() override;
+	void Eliminate();
 
 protected:
 	virtual void BeginPlay() override;
