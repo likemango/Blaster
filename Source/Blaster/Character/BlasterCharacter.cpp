@@ -61,12 +61,17 @@ void ABlasterCharacter::BeginPlay()
 	
 }
 
+void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME(ABlasterCharacter, Health);
+}
+
 void ABlasterCharacter::OnRep_ReplicatedMovement()
 {
 	Super::OnRep_ReplicatedMovement();
-	// UOverHeadWidget* OverHeadWidget = Cast<UOverHeadWidget>(WidgetComponent->GetWidget());
-	// UE_LOG(LogTemp, Warning, TEXT("ProxyAO_Yaw: %f, LocalRole: %s"), ProxyAO_Yaw, *OverHeadWidget->GetLocalNetRole(this));
-	UE_LOG(LogTemp, Warning, TEXT("ProxyAO_Yaw: %f"), ProxyAO_Yaw);
 	ProxyAimOffset();
 	TimeSinceLastMovementReplication = 0;
 }
@@ -109,13 +114,6 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ThisClass::AimReleased);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ThisClass::FirePressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ThisClass::FireReleased);
-}
-
-void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -449,6 +447,11 @@ float ABlasterCharacter::CalculateSpeed() const
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
 	return Velocity.Size();
+}
+
+void ABlasterCharacter::OnRep_Health()
+{
+	
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)

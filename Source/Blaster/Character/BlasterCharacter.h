@@ -96,11 +96,12 @@ private:
 	/*
 	 * Health
 	 */
-	UPROPERTY(EditAnywhere, Category="PlayerStats")
+	UPROPERTY(VisibleAnywhere, Category="PlayerStats")
 	float MaxHealth = 100.f;
-
-	UPROPERTY(EditAnywhere, Category="PlayerStats")
+	UPROPERTY(ReplicatedUsing=OnRep_Health, VisibleAnywhere, Category="PlayerStats")
 	float Health = 100.f;
+	UFUNCTION()
+	void OnRep_Health();
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
