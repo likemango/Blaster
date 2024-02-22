@@ -275,10 +275,10 @@ void ABlasterCharacter::CalculateAimOffset(float DeltaTime)
 	bool bInAir = GetCharacterMovement()->IsFalling();
 
 	// this tell us that how AO_Yaw changed during turning.
-	FVector Dir_RootComponent = GetActorForwardVector();
-	FVector Dir_RootBone = GetMesh()->GetBoneAxis("root", EAxis::X).RotateAngleAxis(90, FVector(0,0,1));
-	DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + Dir_RootComponent * 500.f, FColor::Red);
-	DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + Dir_RootBone * 500.f, FColor::Blue);
+	// FVector Dir_RootComponent = GetActorForwardVector();
+	// FVector Dir_RootBone = GetMesh()->GetBoneAxis("root", EAxis::X).RotateAngleAxis(90, FVector(0,0,1));
+	// DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + Dir_RootComponent * 500.f, FColor::Red);
+	// DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + Dir_RootBone * 500.f, FColor::Blue);
 	
 	if(Speed == 0.f && !bInAir) // standing still, not jumping
 	{

@@ -92,6 +92,15 @@ private:
 	float ProxyAO_Yaw;
 	float TimeSinceLastMovementReplication;
 	float CalculateSpeed() const;
+
+	/*
+	 * Health
+	 */
+	UPROPERTY(EditAnywhere, Category="PlayerStats")
+	float MaxHealth = 100.f;
+
+	UPROPERTY(EditAnywhere, Category="PlayerStats")
+	float Health = 100.f;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
