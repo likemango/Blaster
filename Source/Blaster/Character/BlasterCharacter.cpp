@@ -55,6 +55,8 @@ ABlasterCharacter::ABlasterCharacter()
 
 	// how fast character turn rotation. Should 'bOrientRotationToMovement' to true.
 	GetCharacterMovement()->RotationRate = FRotator(0,850.f,0);
+	// always spawn character
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -264,7 +266,18 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0;
 }
 
-void ABlasterCharacter::Eliminate_Implementation()
+void ABlasterCharacter::Eliminate()
+{
+	MulticastEliminate();
+	GetWorldTimerManager().SetTimer(
+		RespawnTimer,
+		this,
+		&ThisClass::OnRespawnTimerFinished,
+		RespawnTime
+	);
+}
+
+void ABlasterCharacter::MulticastEliminate_Implementation()
 {
 	bEliminated = true;
 	PlayElimMontage();
@@ -453,6 +466,15 @@ void ABlasterCharacter::OnRep_Health()
 {
 	UpdateHealthHUD();
 	PlayHitReactMontage();
+}
+
+void ABlasterCharacter::OnRespawnTimerFinished()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	if(BlasterGameMode)
+	{
+		BlasterGameMode->RespawnCharacter(this, Controller);
+	}
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)

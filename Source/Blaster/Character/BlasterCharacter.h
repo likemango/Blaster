@@ -27,8 +27,10 @@ public:
 	FVector GetHitTarget() const;
 	virtual void OnRep_ReplicatedMovement() override;
 
-	UFUNCTION(NetMulticast, Reliable)
 	void Eliminate();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEliminate();
 
 protected:
 	virtual void BeginPlay() override;
@@ -114,6 +116,11 @@ private:
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 	
 	bool bEliminated = false;
+	FTimerHandle RespawnTimer;
+	void OnRespawnTimerFinished();
+	UPROPERTY(EditDefaultsOnly)
+	float RespawnTime = 3.0f;
+	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsEquippedWeapon();
