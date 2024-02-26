@@ -22,9 +22,12 @@ public:
 	void UpdateHealthHUD();
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayElimMontage();
 	
 	FVector GetHitTarget() const;
 	virtual void OnRep_ReplicatedMovement() override;
+
+	UFUNCTION(NetMulticast, Reliable)
 	void Eliminate();
 
 protected:
@@ -79,6 +82,8 @@ private:
 	class UAnimMontage* FireWeaponMontage;
 	UPROPERTY(EditAnywhere, Category=Combat)
 	class UAnimMontage* HitReactMontage;
+	UPROPERTY(EditAnywhere, Category=Combat)
+	class UAnimMontage* EliminateMontage;
 	
 	void HideCameraIfCharacterClose();
 	UPROPERTY(EditAnywhere)
@@ -108,6 +113,7 @@ private:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 	
+	bool bEliminated = false;
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsEquippedWeapon();
@@ -118,4 +124,5 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace;}
 	FORCEINLINE UCameraComponent* GetCamera() const { return FollowCamera;}
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
+	FORCEINLINE bool IsEliminated() const { return bEliminated;}
 };

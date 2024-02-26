@@ -264,9 +264,10 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0;
 }
 
-void ABlasterCharacter::Eliminate()
+void ABlasterCharacter::Eliminate_Implementation()
 {
-	
+	bEliminated = true;
+	PlayElimMontage();
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -400,6 +401,16 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
+
+void ABlasterCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && EliminateMontage)
+	{
+		AnimInstance->Montage_Play(EliminateMontage);
+	}
+}
+
 void ABlasterCharacter::PlayHitReactMontage()
 {
 	if(!Combat || !Combat->EquippedWeapon) return;
@@ -428,6 +439,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	PlayHitReactMontage();
 	if(Health == 0.f)
 	{
+		// GameMode只能在服务器端获取到
 		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
 		if(BlasterGameMode)
 		{

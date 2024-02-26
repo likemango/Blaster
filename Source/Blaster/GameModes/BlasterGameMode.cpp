@@ -3,6 +3,8 @@
 
 #include "BlasterGameMode.h"
 
+#include "Blaster/Character/BlasterCharacter.h"
+
 
 // Sets default values
 ABlasterGameMode::ABlasterGameMode()
@@ -13,5 +15,8 @@ ABlasterGameMode::ABlasterGameMode()
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABlasterPlayerController* VictimController,
 	ABlasterPlayerController* AttackerController)
 {
-	
+	if(ElimmedCharacter)
+	{
+		ElimmedCharacter->Eliminate();
+	}
 }
