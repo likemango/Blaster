@@ -259,10 +259,14 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 
 	EquippedWeapon = WeaponToEquip;
+
+	// 1. send to client(set weapon state)
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	// 2. send to client(attach actor), no sure which get to client first!
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 	if (HandSocket)
 	{
+		//因为EquippedWeapon是可复制的，当它被attach到任何对象上时，都会同步复制AActor::OnRep_AttachmentReplication()
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 	EquippedWeapon->SetOwner(Character);
@@ -273,6 +277,13 @@ void UCombatComponent::OnRep_EquipWeapon()
 {
 	if(EquippedWeapon && Character)
 	{
+		// it can be called twice
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if (HandSocket)
+		{
+			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}

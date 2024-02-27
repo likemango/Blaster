@@ -29,6 +29,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShow);
 	virtual void Fire(const FVector& HitTarget);
+	void Dropped();
 	
 	// Textures for the weapon crosshairs
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
@@ -91,7 +92,6 @@ private:
 	float ZoomInterpSpeed = 20.f;
 	
 public:
-	// it calls from server, so always has authority!
 	void SetWeaponState(EWeaponState NewState);
 	
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere;}

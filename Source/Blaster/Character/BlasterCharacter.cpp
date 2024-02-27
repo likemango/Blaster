@@ -269,6 +269,12 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 void ABlasterCharacter::Eliminate()
 {
+	// todo: drop the weapon
+	if(Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Dropped();
+	}
+	
 	MulticastEliminate();
 	GetWorldTimerManager().SetTimer(
 		RespawnTimer,
@@ -277,12 +283,12 @@ void ABlasterCharacter::Eliminate()
 		RespawnTime
 	);
 }
-
 void ABlasterCharacter::MulticastEliminate_Implementation()
 {
 	bEliminated = true;
 	PlayElimMontage();
 
+	// Eliminate effect
 	if (DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
@@ -291,6 +297,12 @@ void ABlasterCharacter::MulticastEliminate_Implementation()
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
 	}
 	StartDissolve();
+	// Disable character movement
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	// Disable collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -424,7 +436,6 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
-
 void ABlasterCharacter::PlayElimMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -433,7 +444,6 @@ void ABlasterCharacter::PlayElimMontage()
 		AnimInstance->Montage_Play(EliminateMontage);
 	}
 }
-
 void ABlasterCharacter::PlayHitReactMontage()
 {
 	if(!Combat || !Combat->EquippedWeapon) return;
@@ -487,14 +497,6 @@ void ABlasterCharacter::OnRespawnTimerFinished()
 	}
 }
 
-void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
-{
-	if (DynamicDissolveMaterialInstance)
-	{
-		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
-	}
-}
-
 void ABlasterCharacter::StartDissolve()
 {
 	DissolveTrack.BindDynamic(this, &ThisClass::ABlasterCharacter::UpdateDissolveMaterial);
@@ -502,6 +504,13 @@ void ABlasterCharacter::StartDissolve()
 	{
 		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
 		DissolveTimeline->Play();
+	}
+}
+void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
+{
+	if (DynamicDissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
 	}
 }
 
