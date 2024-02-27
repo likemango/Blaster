@@ -5,6 +5,52 @@
 
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Net/UnrealNetwork.h"
+
+void ABlasterPlayerState::AddToScore(float ScoreAmount)
+{
+	float NewScore = GetScore() + ScoreAmount;
+	SetScore(NewScore);
+
+	if(GetPawn())
+	{
+		BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : BlasterCharacter;
+		if(BlasterCharacter)
+		{
+			BlasterController = BlasterController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterController;
+			if(BlasterController)
+			{
+				BlasterController->SetScore(NewScore);
+			}
+		}
+	}
+}
+
+void ABlasterPlayerState::AddToDefeats(int32 DefeatAmount)
+{
+	Defeats += DefeatAmount;
+	
+	if(GetPawn())
+	{
+		BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : BlasterCharacter;
+		if(BlasterCharacter)
+		{
+			BlasterController = BlasterController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterController;
+			if(BlasterController)
+			{
+				BlasterController->SetDefeats(Defeats);
+			}
+		}
+	}	
+}
+
+
+void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterPlayerState, Defeats);
+}
 
 void ABlasterPlayerState::OnRep_Score()
 {
@@ -24,11 +70,8 @@ void ABlasterPlayerState::OnRep_Score()
 	}	
 }
 
-void ABlasterPlayerState::AddToScore(float ScoreAmount)
+void ABlasterPlayerState::OnRep_Defeats()
 {
-	float NewScore = GetScore() + ScoreAmount;
-	SetScore(NewScore);
-
 	if(GetPawn())
 	{
 		BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : BlasterCharacter;
@@ -37,8 +80,8 @@ void ABlasterPlayerState::AddToScore(float ScoreAmount)
 			BlasterController = BlasterController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterController;
 			if(BlasterController)
 			{
-				BlasterController->SetScore(NewScore);
+				BlasterController->SetDefeats(Defeats);
 			}
 		}
-	}
+	}	
 }

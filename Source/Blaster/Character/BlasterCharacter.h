@@ -117,7 +117,8 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
-	class ABlasterPlayerController* BlasterPlayerController;
+	UPROPERTY()
+	ABlasterPlayerController* BlasterPlayerController;
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -158,7 +159,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	USoundCue* ElimBotSound;
 
-	// PlayerState
+	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 	
 public:

@@ -38,7 +38,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* HitSoundCue;
 
-	class UParticleSystemComponent* ParticleSystemComponent;
+	UPROPERTY()
+	UParticleSystemComponent* ParticleSystemComponent;
 
 	UPROPERTY(EditAnywhere)
 	float DamageValue = 20.f;

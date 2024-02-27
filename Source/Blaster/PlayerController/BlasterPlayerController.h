@@ -19,11 +19,13 @@ public:
 	
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetScore(float NewScore);
+	void SetDefeats(int32 NewDefeats);
 	
 protected:
 	void BeginPlay() override;
 
 private:
+	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
 };
