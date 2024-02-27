@@ -70,15 +70,6 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterCharacter, Health);
 }
 
-void ABlasterCharacter::UpdateHealthHUD()
-{
-	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
-	if(BlasterPlayerController)
-	{
-		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
-	}
-}
-
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -90,7 +81,14 @@ void ABlasterCharacter::BeginPlay()
 		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
 	}
 }
-
+void ABlasterCharacter::UpdateHealthHUD()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+}
 void ABlasterCharacter::Destroyed()
 {
 	Super::Destroyed();
