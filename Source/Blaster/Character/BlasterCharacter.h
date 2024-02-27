@@ -55,6 +55,8 @@ protected:
 	void FirePressed();
 	void FireReleased();
 	void PlayHitReactMontage();
+	// poll init for some classes which is not ready when character BeginPlay()
+	void PollInit();
 private:
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	class USpringArmComponent* CameraBoom;
@@ -148,12 +150,16 @@ private:
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;
 
+	// Elim bot particle effects
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ElimBotEffect;
 	UPROPERTY(VisibleAnywhere)
 	UParticleSystemComponent* ElimBotComponent;
 	UPROPERTY(EditAnywhere)
 	USoundCue* ElimBotSound;
+
+	// PlayerState
+	class ABlasterPlayerState* BlasterPlayerState;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
