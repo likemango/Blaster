@@ -20,6 +20,7 @@ public:
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetScore(float NewScore);
 	void SetDefeats(int32 NewDefeats);
+	void SetHUDWeaponAmmo(int32 NewWeaponAmmo);
 	
 protected:
 	void BeginPlay() override;

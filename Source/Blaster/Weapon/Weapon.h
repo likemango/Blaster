@@ -30,7 +30,9 @@ public:
 	void ShowPickupWidget(bool bShow);
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
-	
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
+
 	// Textures for the weapon crosshairs
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	class UTexture2D* CrosshairsCenter;
@@ -90,6 +92,23 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed = 20.f;
+
+	/*
+	 * Weapon Ammo Amount
+	 */
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_WeaponAmmo)
+	int32 WeaponAmmo;
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+	UFUNCTION()
+	void OnRep_WeaponAmmo();
+	void SpendRound();
+
+	UPROPERTY()
+	class ABlasterCharacter* BlasterCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterPlayerController;
 	
 public:
 	void SetWeaponState(EWeaponState NewState);

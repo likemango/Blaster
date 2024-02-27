@@ -5,6 +5,7 @@
 
 #include "Casing.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -67,25 +68,55 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, WeaponAmmo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if(BlasterCharacter)
+	ABlasterCharacter* OverlapBlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(OverlapBlasterCharacter)
 	{
-		BlasterCharacter->SetOverlappingWeapon(this);
+		OverlapBlasterCharacter->SetOverlappingWeapon(this);
 	}
 }
 
 void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if(BlasterCharacter)
+	ABlasterCharacter* OverlapBlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(OverlapBlasterCharacter)
 	{
-		BlasterCharacter->SetOverlappingWeapon(nullptr);
+		OverlapBlasterCharacter->SetOverlappingWeapon(nullptr);
+	}
+}
+
+void AWeapon::SpendRound()
+{
+	UE_LOG(LogTemp, Warning, TEXT("--WeaponAmmo"));
+	--WeaponAmmo;
+	SetHUDAmmo();
+}
+
+void AWeapon::OnRep_WeaponAmmo()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnRep --WeaponAmmo"));
+	SetHUDAmmo();
+}
+
+void AWeapon::SetHUDAmmo()
+{
+	if(GetOwner())
+	{
+		BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterCharacter;
+		if(BlasterCharacter)
+		{
+			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterPlayerController;
+			if(BlasterPlayerController)
+			{
+				BlasterPlayerController->SetHUDWeaponAmmo(WeaponAmmo);
+			}
+		}
 	}
 }
 
@@ -164,6 +195,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
+	SpendRound();
 }
 
 void AWeapon::Dropped()
@@ -175,7 +207,21 @@ void AWeapon::Dropped()
 	// 在这个情况下，等同于DetachFromActor(DetachmentTransformRules);
 	WeaponMesh->DetachFromComponent(DetachmentTransformRules);
 	SetOwner(nullptr);
+	BlasterCharacter = nullptr;
+	BlasterPlayerController = nullptr;
 }
 
-
-
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	
+	if(Owner == nullptr)
+	{
+		BlasterCharacter = nullptr;
+		BlasterPlayerController = nullptr;
+	}
+	else
+	{
+		SetHUDAmmo();
+	}
+}
