@@ -13,10 +13,10 @@ class BLASTER_API AProjectile : public AActor
 
 public:
 	AProjectile();
-	virtual void Tick(float DeltaTime) override;
 
 protected:
 	virtual void BeginPlay() override;
+	//for replicated actor, destroyed function gonna be called in all clients!
 	virtual void Destroyed() override;
 	
 	UFUNCTION()

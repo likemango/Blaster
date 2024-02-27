@@ -7,7 +7,6 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/GameModes/BlasterGameMode.h"
-#include "Blaster/HUD/OverHeadWidget.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
@@ -15,8 +14,11 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Sound/SoundCue.h"
 
 
 // Sets default values
@@ -86,6 +88,16 @@ void ABlasterCharacter::BeginPlay()
 	if(HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
+	}
+}
+
+void ABlasterCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	if(ElimBotComponent)
+	{
+		ElimBotComponent->DestroyComponent();
 	}
 }
 
@@ -303,6 +315,17 @@ void ABlasterCharacter::MulticastEliminate_Implementation()
 	// Disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// Elim bot particles
+	if(ElimBotEffect)
+	{
+		FVector ElimBotSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 200.f);
+		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(this, ElimBotEffect,
+			ElimBotSpawnPoint, GetActorRotation());
+	}
+	if(ElimBotSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ElimBotSound, GetActorLocation());
+	}
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

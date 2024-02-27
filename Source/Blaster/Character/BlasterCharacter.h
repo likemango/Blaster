@@ -10,6 +10,7 @@
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
+class USoundCue;
 class UTimelineComponent;
 
 UCLASS()
@@ -37,6 +38,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Destroyed() override;
 	
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -145,7 +147,13 @@ private:
 	// Material instance set on the Blueprint, used with the dynamic material instance
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;
-	
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect;
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
+	UPROPERTY(EditAnywhere)
+	USoundCue* ElimBotSound;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

@@ -4,7 +4,6 @@
 #include "Projectile.h"
 
 #include "Blaster/Blaster.h"
-#include "Blaster/Character/BlasterCharacter.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,7 +12,7 @@
 
 AProjectile::AProjectile()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
@@ -68,10 +67,5 @@ void AProjectile::Destroyed()
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	Destroyed();
-}
-
-void AProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 

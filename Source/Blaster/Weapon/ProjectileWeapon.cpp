@@ -10,6 +10,12 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
 
+	// Only server spawn the bullet, the bullet is replicated, so show in all clients!
+	
+	// ENetRole LocalRole = GetLocalRole();
+	// FString LocalRoleText = StaticEnum<ENetRole>()->GetNameStringByValue((int64)LocalRole);
+	// UE_LOG(LogTemp, Warning, TEXT("LocalRole: %s"), *LocalRoleText);
+	
 	if(!HasAuthority())
 		return;
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());

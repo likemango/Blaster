@@ -7,10 +7,9 @@
 #include "Kismet/GameplayStatics.h"
 
 
-// Sets default values
 AProjectileBullet::AProjectileBullet()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void AProjectileBullet::BeginPlay()
@@ -36,9 +35,3 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 	
 	Super::OnHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
 }
-
-void AProjectileBullet::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
