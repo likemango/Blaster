@@ -21,7 +21,7 @@ public:
 	void SetScore(float NewScore);
 	void SetDefeats(int32 NewDefeats);
 	void SetHUDWeaponAmmo(int32 NewWeaponAmmo);
-	void SetHUDWeaponCarriedAmmo(int32 NewWeaponCarriedAmmo);
+	void SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo);
 	
 protected:
 	void BeginPlay() override;

@@ -120,6 +120,11 @@ private:
 
 	void HandleReload() const;
 
+	int32 AmountToReload();
+
+	void UpdateAmmoValues();
+	
 	UFUNCTION(BlueprintCallable)
-	void OnReloadingFinished();
+	void FinishReloading();
+
 };

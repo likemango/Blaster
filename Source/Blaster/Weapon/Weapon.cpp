@@ -68,7 +68,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, WeaponAmmo);
+	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
@@ -94,7 +94,7 @@ void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverLappedComponent, AActo
 void AWeapon::SpendRound()
 {
 	UE_LOG(LogTemp, Warning, TEXT("--WeaponAmmo"));
-	WeaponAmmo = FMath::Clamp(WeaponAmmo-1, 0, MagCapacity);
+	Ammo = FMath::Clamp(Ammo-1, 0, MagCapacity);
 	SetHUDAmmo();
 }
 
@@ -114,7 +114,7 @@ void AWeapon::SetHUDAmmo()
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterPlayerController;
 			if(BlasterPlayerController)
 			{
-				BlasterPlayerController->SetHUDWeaponAmmo(WeaponAmmo);
+				BlasterPlayerController->SetHUDWeaponAmmo(Ammo);
 			}
 		}
 	}
@@ -211,6 +211,12 @@ void AWeapon::Dropped()
 	BlasterPlayerController = nullptr;
 }
 
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+}
+
 void AWeapon::OnRep_Owner()
 {
 	Super::OnRep_Owner();
@@ -228,5 +234,5 @@ void AWeapon::OnRep_Owner()
 
 bool AWeapon::IsEmpty() const
 {
-	return WeaponAmmo <= 0;
+	return Ammo <= 0;
 }

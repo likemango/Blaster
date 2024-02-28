@@ -31,6 +31,7 @@ public:
 	void ShowPickupWidget(bool bShow);
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
+	void AddAmmo(int32 AmmoToAdd);
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
 
@@ -101,7 +102,7 @@ private:
 	 * Weapon Ammo Amount
 	 */
 	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_WeaponAmmo)
-	int32 WeaponAmmo;
+	int32 Ammo;
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 	UFUNCTION()
@@ -127,4 +128,6 @@ public:
 	FORCEINLINE float GetFireInterval() const { return FireInterval;}
 	bool IsEmpty() const;
 	FORCEINLINE EBlasterWeaponType GetWeaponType() const { return WeaponType;}
+	FORCEINLINE int32 GetAmmo() const { return Ammo;}
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity;}
 };

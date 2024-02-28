@@ -77,7 +77,7 @@ void ABlasterPlayerController::SetHUDWeaponAmmo(int32 NewWeaponAmmo)
 	}
 }
 
-void ABlasterPlayerController::SetHUDWeaponCarriedAmmo(int32 NewWeaponCarriedAmmo)
+void ABlasterPlayerController::SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo)
 {
 	BlasterHUD = BlasterHUD ? BlasterHUD : Cast<ABlasterHUD>(GetHUD());
 	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay &&
