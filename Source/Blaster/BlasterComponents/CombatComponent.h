@@ -6,6 +6,7 @@
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "Components/ActorComponent.h"
+#include "Blaster/BlasterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LINE_LENGTH 80000.0f;
@@ -24,6 +25,7 @@ public:
 	
 	// only execute on the server
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void Reload();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -34,7 +36,7 @@ protected:
 	void Server_SetIsAiming(bool bIsAim);
 
 	UFUNCTION()
-	void OnRep_EquipWeapon();
+	void OnRep_EquipWeapon() const;
 	void Fire();
 
 	void FireButtonPressed(bool bPressed);
@@ -49,7 +51,9 @@ protected:
 
 	void SetHUDCrosshairs(float DeltaTime);
 
-	
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character;
@@ -105,6 +109,17 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 30;
 	// because hash algorithm result changed on server and client, can't be replicated!
-	TMap<EWeaponType, int32> CarriedAmmoMap;
+	TMap<EBlasterWeaponType, int32> CarriedAmmoMap;
 	void InitializeCarriedAmmo();
+
+	UPROPERTY(ReplicatedUsing=OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState() const;
+
+	void HandleReload() const;
+
+	UFUNCTION(BlueprintCallable)
+	void OnReloadingFinished();
 };

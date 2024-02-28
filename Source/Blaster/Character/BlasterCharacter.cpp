@@ -20,7 +20,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
-
+#include "Blaster/Weapon/WeaponTypes.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -350,6 +350,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ThisClass::AimReleased);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ThisClass::FirePressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ThisClass::FireReleased);
+	PlayerInputComponent->BindAction("Reload", IE_Released, this, &ThisClass::ReloadButtonPressed);
 }
 void ABlasterCharacter::MoveForward(float Value)
 {
@@ -411,6 +412,15 @@ void ABlasterCharacter::CrouchReleased()
 		UnCrouch();
 	}
 }
+
+void ABlasterCharacter::ReloadButtonPressed()
+{
+	if(Combat)
+	{
+		Combat->Reload();
+	}
+}
+
 void ABlasterCharacter::AimPressed()
 {
 	if(Combat)
@@ -463,6 +473,26 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
+
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if(!Combat || !Combat->EquippedWeapon) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+		case EBlasterWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
 void ABlasterCharacter::PlayElimMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -471,6 +501,7 @@ void ABlasterCharacter::PlayElimMontage()
 		AnimInstance->Montage_Play(EliminateMontage);
 	}
 }
+
 void ABlasterCharacter::PlayHitReactMontage()
 {
 	if(!Combat || !Combat->EquippedWeapon) return;
@@ -607,6 +638,16 @@ AWeapon* ABlasterCharacter::GetEquippedWeapon() const
 	}
 	return nullptr;
 }
+
+ECombatState ABlasterCharacter::GetCombatState() const
+{
+	if(Combat)
+	{
+		return Combat->CombatState;
+	}
+	return ECombatState::ECS_MAX;
+}
+
 bool ABlasterCharacter::IsEquippedWeapon()
 {
 	return Combat && Combat->EquippedWeapon;

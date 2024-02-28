@@ -114,7 +114,7 @@ private:
 	class ABlasterPlayerController* BlasterPlayerController;
 
 	UPROPERTY(EditAnywhere)
-	EWeaponType WeaponType;
+	EBlasterWeaponType WeaponType;
 	
 public:
 	void SetWeaponState(EWeaponState NewState);
@@ -126,5 +126,5 @@ public:
 	FORCEINLINE bool IsAutomatic() const { return bAutomatic;}
 	FORCEINLINE float GetFireInterval() const { return FireInterval;}
 	bool IsEmpty() const;
-	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType;}
+	FORCEINLINE EBlasterWeaponType GetWeaponType() const { return WeaponType;}
 };

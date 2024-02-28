@@ -87,4 +87,6 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 
 	bEliminated = BlasterCharacter->IsEliminated();
+
+	bUseFABRIK = BlasterCharacter->GetCombatState() == ECombatState::ECS_Reloading;
 }

@@ -26,6 +26,7 @@ public:
 	void UpdateHealthHUD();
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayElimMontage();
 	
 	FVector GetHitTarget() const;
@@ -47,6 +48,7 @@ protected:
 	void EquipButtonPressed();
 	void CrouchPressed();
 	void CrouchReleased();
+	void ReloadButtonPressed();
 	void AimPressed();
 	void AimReleased();
 	void CalculateAO_Pitch();
@@ -67,7 +69,7 @@ private:
 	
 	UPROPERTY(ReplicatedUsing=OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UCombatComponent* Combat;
 
 	UFUNCTION()
@@ -87,8 +89,13 @@ private:
 	ETurningInPlace TurningInPlace;
 	void SetTurningInPlaceType(float DeltaTime);
 
+	/*
+	 * Animation Montage
+	 */
 	UPROPERTY(EditAnywhere, Category=Combat)
 	class UAnimMontage* FireWeaponMontage;
+	UPROPERTY(EditAnywhere, Category=Combat)
+	class UAnimMontage* ReloadMontage;
 	UPROPERTY(EditAnywhere, Category=Combat)
 	class UAnimMontage* HitReactMontage;
 	UPROPERTY(EditAnywhere, Category=Combat)
@@ -175,4 +182,5 @@ public:
 	FORCEINLINE bool IsEliminated() const { return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth;}
+	ECombatState GetCombatState() const;
 };
