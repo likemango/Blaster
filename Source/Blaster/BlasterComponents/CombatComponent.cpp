@@ -28,8 +28,16 @@ void UCombatComponent::BeginPlay()
 	if(Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-		DefaultFOV = Character->GetCamera()->FieldOfView;
-		CurrentFOV = DefaultFOV;
+		if(Character->GetCamera())
+		{
+			DefaultFOV = Character->GetCamera()->FieldOfView;
+			CurrentFOV = DefaultFOV;
+		}
+		// 只在服务器端初始化弹药数量
+		if(Character->HasAuthority())
+		{
+			InitializeCarriedAmmo();
+		}
 	}
 }
 
@@ -39,6 +47,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
+	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction)
@@ -129,6 +138,13 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 	}
 	Character->GetCamera()->SetFieldOfView(CurrentFOV);
 }
+
+bool UCombatComponent::CanFire() const
+{
+	if(!EquippedWeapon) return false;
+	return !EquippedWeapon->IsEmpty() && bCanFire;
+}
+
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 {
 	FVector2D ViewportSize;
@@ -186,7 +202,7 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 }
 void UCombatComponent::Fire()
 {
-	if(bCanFire)
+	if(CanFire())
 	{
 		ServerFire(LocallyHitTarget);
 		StartFireTimer();
@@ -219,6 +235,11 @@ void UCombatComponent::OnFireTimerFinished()
 }
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& HitTarget)
 {
+	if(EquippedWeapon)
+	{
+		// server called this!
+		EquippedWeapon->SpendRound();
+	}
 	MulticastFire(HitTarget);
 }
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& HitTarget)
@@ -275,6 +296,19 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
+
+	//该方法仅在服务器端发起，因此从服务器端获取当前信息
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDWeaponCarriedAmmo(CarriedAmmo);
+	}
+	//
+	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
@@ -292,4 +326,19 @@ void UCombatComponent::OnRep_EquipWeapon()
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}
+}
+
+void UCombatComponent::OnRep_CarriedAmmo()
+{
+	//该复制仅发生在服务器向当前component的持有者，当更新时，同步更新owner的HUD
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDWeaponCarriedAmmo(CarriedAmmo);
+	}
+}
+
+void UCombatComponent::InitializeCarriedAmmo()
+{
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
 }

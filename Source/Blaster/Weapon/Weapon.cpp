@@ -94,7 +94,7 @@ void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverLappedComponent, AActo
 void AWeapon::SpendRound()
 {
 	UE_LOG(LogTemp, Warning, TEXT("--WeaponAmmo"));
-	--WeaponAmmo;
+	WeaponAmmo = FMath::Clamp(WeaponAmmo-1, 0, MagCapacity);
 	SetHUDAmmo();
 }
 
@@ -109,7 +109,7 @@ void AWeapon::SetHUDAmmo()
 	if(GetOwner())
 	{
 		BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterCharacter;
-		if(BlasterCharacter)
+		if(BlasterCharacter && BlasterCharacter->IsLocallyControlled())
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterPlayerController;
 			if(BlasterPlayerController)
@@ -195,7 +195,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
-	SpendRound();
+	// SpendRound();
 }
 
 void AWeapon::Dropped()
@@ -224,4 +224,9 @@ void AWeapon::OnRep_Owner()
 	{
 		SetHUDAmmo();
 	}
+}
+
+bool AWeapon::IsEmpty() const
+{
+	return WeaponAmmo <= 0;
 }

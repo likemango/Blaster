@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 
@@ -32,6 +33,9 @@ public:
 	void Dropped();
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
+
+	// Server called
+	void SpendRound();
 
 	// Textures for the weapon crosshairs
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
@@ -102,13 +106,15 @@ private:
 	int32 MagCapacity;
 	UFUNCTION()
 	void OnRep_WeaponAmmo();
-	void SpendRound();
 
 	UPROPERTY()
 	class ABlasterCharacter* BlasterCharacter;
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
+
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
 	
 public:
 	void SetWeaponState(EWeaponState NewState);
@@ -119,4 +125,6 @@ public:
 	FORCEINLINE float GetAimChangeSpeed() const {return ZoomInterpSpeed;}
 	FORCEINLINE bool IsAutomatic() const { return bAutomatic;}
 	FORCEINLINE float GetFireInterval() const { return FireInterval;}
+	bool IsEmpty() const;
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType;}
 };

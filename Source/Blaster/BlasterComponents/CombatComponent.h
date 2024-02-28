@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blaster/HUD/BlasterHUD.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
@@ -92,4 +93,18 @@ private:
 	UPROPERTY(EditAnywhere)
 	float ZoomOffInterpSpeed = 20.f;
 	void InterpFOV(float DeltaTime);
+
+	bool CanFire() const;
+
+	//当前持有的武器的弹药
+	UPROPERTY(ReplicatedUsing=OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo = 30;
+	// because hash algorithm result changed on server and client, can't be replicated!
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+	void InitializeCarriedAmmo();
 };
