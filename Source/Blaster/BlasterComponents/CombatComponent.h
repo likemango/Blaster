@@ -116,7 +116,7 @@ private:
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
 	UFUNCTION()
-	void OnRep_CombatState() const;
+	void OnRep_CombatState();
 
 	void HandleReload() const;
 
