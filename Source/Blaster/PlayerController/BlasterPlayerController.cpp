@@ -8,11 +8,26 @@
 #include "Blaster/HUD/CharacterOverlay.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
+	SetHUDTime(MatchTime);
+}
+
+void ABlasterPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	uint32 CurrentSecond = FMath::FloorToInt(MatchTime - UGameplayStatics::GetTimeSeconds(this));
+	if(CurrentSecond != LastSecond)
+	{
+		// it past more a second
+		SetHUDTime(MatchTime - UGameplayStatics::GetTimeSeconds(this));
+	}
+	LastSecond = CurrentSecond;
 }
 
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
@@ -86,5 +101,19 @@ void ABlasterPlayerController::SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo)
 	{
 		FString NewWeaponCarriedAmmoText = FString::Printf(TEXT("%d"),NewWeaponCarriedAmmo);
 		BlasterHUD->CharacterOverlay->WeaponCarriedAmmoText->SetText(FText::FromString(NewWeaponCarriedAmmoText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDTime(float TimeSeconds)
+{
+	BlasterHUD = BlasterHUD ? BlasterHUD : Cast<ABlasterHUD>(GetHUD());
+	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->MatchTimeText;
+	if(bHUDValid)
+	{
+		int32 Mines = FMath::FloorToInt(TimeSeconds / 60.f);
+		int32 Seconds = TimeSeconds - Mines * 60;
+		FString NewMatchTimeText = FString::Printf(TEXT("%02d:%02d"), Mines, Seconds);
+		BlasterHUD->CharacterOverlay->MatchTimeText->SetText(FText::FromString(NewMatchTimeText));
 	}
 }

@@ -22,12 +22,16 @@ public:
 	void SetDefeats(int32 NewDefeats);
 	void SetHUDWeaponAmmo(int32 NewWeaponAmmo);
 	void SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo);
-	
+	void SetHUDTime(float TimeSeconds);
 protected:
-	void BeginPlay() override;
-
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+	
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
+	float MatchTime = 120.f;
+
+	uint32 LastSecond = 0;
 };

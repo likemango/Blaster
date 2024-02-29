@@ -32,4 +32,7 @@ public:
 
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* WeaponCarriedAmmoText;
+
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* MatchTimeText;
 };
