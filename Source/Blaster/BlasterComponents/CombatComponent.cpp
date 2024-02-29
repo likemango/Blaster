@@ -235,6 +235,10 @@ void UCombatComponent::OnFireTimerFinished()
 	{
 		Fire();
 	}
+	if(EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
 }
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& HitTarget)
 {
@@ -316,6 +320,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if(Controller)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	if(EquippedWeapon->IsEmpty())
+	{
+		Reload();
 	}
 	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
