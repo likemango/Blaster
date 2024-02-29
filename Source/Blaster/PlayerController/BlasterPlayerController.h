@@ -22,9 +22,12 @@ public:
 	void SetDefeats(int32 NewDefeats);
 	void SetHUDWeaponAmmo(int32 NewWeaponAmmo);
 	void SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo);
-	void SetHUDTime(float TimeSeconds);
+	void SetHUDMatchCountDown(float TimeSeconds);
+	virtual void ReceivedPlayer() override;
+	float GetServerTime() const;
 protected:
 	virtual void BeginPlay() override;
+	void SetHUDTime();
 	virtual void Tick(float DeltaSeconds) override;
 	
 private:
@@ -33,5 +36,19 @@ private:
 
 	float MatchTime = 120.f;
 
-	uint32 LastSecond = 0;
+	uint32 SecondsLeft = 0;
+
+	UFUNCTION(Server,Reliable)
+	void ServerRequestServerTime(float ClientRequestTime); // client send request to server
+	UFUNCTION(Client,Reliable)
+	void ClientReportServerTime(float ClientRequestTime, float ServerSendTime); // server receive client request, and send back its current time
+
+	UPROPERTY()
+	float ClientServerTimeDelta = 0; // the different between client and server: serverTime - clientTime
+
+	UPROPERTY(EditAnywhere, Category=Time)
+	float TimeSyncFrequency = 5.f;
+
+	float TimeSyncRunningTime = 0;
+	void CheckTimeSync(float TimeDelta);
 };
