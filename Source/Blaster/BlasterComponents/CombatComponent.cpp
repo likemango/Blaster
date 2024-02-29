@@ -11,6 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 
 
 UCombatComponent::UCombatComponent()
@@ -286,7 +287,14 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		EquippedWeapon->Dropped();
 	}
 	EquippedWeapon = WeaponToEquip;
-
+	if(EquipWeaponSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquipWeaponSound,
+			Character->GetActorLocation());
+	}
+	
 	// 1. send to client(set weapon state)
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	// 2. send to client(attach actor), no sure which get to client first!
@@ -298,7 +306,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
-
+	
 	//该方法仅在服务器端发起，因此从服务器端获取当前信息
 	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
@@ -309,7 +317,6 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
-	//
 	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
@@ -384,7 +391,7 @@ void UCombatComponent::OnRep_EquipWeapon() const
 	if(EquippedWeapon && Character)
 	{
 		// it can be called twice
-		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);  
 		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (HandSocket)
 		{
@@ -392,6 +399,11 @@ void UCombatComponent::OnRep_EquipWeapon() const
 		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquipWeaponSound,
+			Character->GetActorLocation());
 	}
 }
 

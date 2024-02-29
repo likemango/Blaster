@@ -65,6 +65,9 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_EquipWeapon)
 	AWeapon* EquippedWeapon;
 
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipWeaponSound;
+
 	UPROPERTY(Replicated)
 	bool bIsAiming;
 
