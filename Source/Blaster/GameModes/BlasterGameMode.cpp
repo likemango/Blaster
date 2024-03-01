@@ -12,7 +12,27 @@
 // Sets default values
 ABlasterGameMode::ABlasterGameMode()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	bDelayedStart = true;
+}
+
+void ABlasterGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	LevelBeginTime = GetWorld()->GetTimeSeconds();
+}
+
+void ABlasterGameMode::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if(MatchState == MatchState::WaitingToStart)
+	{
+		CountDownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelBeginTime;
+		if(CountDownTime <= 0.f)
+		{
+			StartMatch();
+		}
+	}
 }
 
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, ABlasterPlayerController* VictimController,
@@ -51,3 +71,5 @@ void ABlasterGameMode::RespawnCharacter(ACharacter* EliminatedCharacter,AControl
 		RestartPlayerAtPlayerStart(EliminatedController, PlayerStarts[RandomIndex]);
 	}
 }
+
+

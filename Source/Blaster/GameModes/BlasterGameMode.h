@@ -16,4 +16,14 @@ public:
 	
 	virtual void PlayerEliminated(class ABlasterCharacter* EliminatedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController);
 	virtual void RespawnCharacter(ACharacter* EliminatedCharacter, AController* EliminatedController);
+
+	UPROPERTY(EditDefaultsOnly)
+	float WarmupTime = 10.f;
+	
+protected:
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+private:
+	float LevelBeginTime = 0.f;
+	float CountDownTime = 0.f;
 };
