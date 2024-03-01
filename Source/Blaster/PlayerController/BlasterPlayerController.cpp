@@ -9,13 +9,17 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Blaster/GameModes/BlasterGameMode.h"
+#include "Blaster/HUD/Announcement.h"
 #include "Net/UnrealNetwork.h"
 
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
-	SetHUDMatchCountDown(MatchTime);
+	if(BlasterHUD)
+	{
+		BlasterHUD->AddAnnouncementOverlay();
+	}
 }
 
 void ABlasterPlayerController::SetHUDTime()
@@ -194,17 +198,26 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(float Clien
 	ClientServerTimeDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
 
+void ABlasterPlayerController::HandleMatchHasStarted()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD)
+	{
+		BlasterHUD->AddCharacterOverlay();
+		if(BlasterHUD->AnnouncementOverlay)
+		{
+			BlasterHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
+
 void ABlasterPlayerController::SetMatchState(FName NewState)
 {
 	MatchState = NewState;
 
 	if(MatchState == MatchState::InProgress)
 	{
-		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-		if (BlasterHUD)
-		{
-			BlasterHUD->AddCharacterOverlay();
-		}
+		HandleMatchHasStarted();
 	}
 }
 
@@ -212,11 +225,7 @@ void ABlasterPlayerController::OnRep_MatchState()
 {
 	if(MatchState == MatchState::InProgress)
 	{
-		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-		if (BlasterHUD)
-		{
-			BlasterHUD->AddCharacterOverlay();
-		}
+		HandleMatchHasStarted();
 	}
 }
 

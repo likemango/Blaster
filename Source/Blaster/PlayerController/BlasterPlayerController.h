@@ -26,6 +26,7 @@ public:
 	void SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo);
 	void SetHUDMatchCountDown(float TimeSeconds);
 	float GetServerTime() const;
+	void HandleMatchHasStarted();
 	void SetMatchState(FName NewState);
 protected:
 	virtual void BeginPlay() override;
