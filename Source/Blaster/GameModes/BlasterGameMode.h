@@ -16,7 +16,8 @@ public:
 	
 	virtual void PlayerEliminated(class ABlasterCharacter* EliminatedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController);
 	virtual void RespawnCharacter(ACharacter* EliminatedCharacter, AController* EliminatedController);
-
+	virtual void OnMatchStateSet() override;
+	
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.f;
 	

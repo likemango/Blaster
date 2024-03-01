@@ -8,7 +8,8 @@
 #include "Blaster/HUD/CharacterOverlay.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
-#include "Kismet/GameplayStatics.h"
+#include "Blaster/GameModes/BlasterGameMode.h"
+#include "Net/UnrealNetwork.h"
 
 void ABlasterPlayerController::BeginPlay()
 {
@@ -145,6 +146,13 @@ void ABlasterPlayerController::ReceivedPlayer()
 	}
 }
 
+void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterPlayerController, MatchState);
+}
+
 float ABlasterPlayerController::GetServerTime() const
 {
 	if(HasAuthority())
@@ -172,3 +180,28 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(float Clien
 	ClientServerTimeDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
 
+void ABlasterPlayerController::SetMatchState(FName NewState)
+{
+	MatchState = NewState;
+
+	if(MatchState == MatchState::InProgress)
+	{
+		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+		if (BlasterHUD)
+		{
+			BlasterHUD->AddCharacterOverlay();
+		}
+	}
+}
+
+void ABlasterPlayerController::OnRep_MatchState()
+{
+	if(MatchState == MatchState::InProgress)
+	{
+		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+		if (BlasterHUD)
+		{
+			BlasterHUD->AddCharacterOverlay();
+		}
+	}
+}

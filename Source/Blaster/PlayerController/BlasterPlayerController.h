@@ -16,6 +16,8 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 
 public:
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void ReceivedPlayer() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetScore(float NewScore);
@@ -23,8 +25,8 @@ public:
 	void SetHUDWeaponAmmo(int32 NewWeaponAmmo);
 	void SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo);
 	void SetHUDMatchCountDown(float TimeSeconds);
-	virtual void ReceivedPlayer() override;
 	float GetServerTime() const;
+	void SetMatchState(FName NewState);
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
@@ -51,4 +53,10 @@ private:
 
 	float TimeSyncRunningTime = 0;
 	void CheckTimeSync(float TimeDelta);
+
+	UPROPERTY(ReplicatedUsing=OnRep_MatchState)
+	FName MatchState;
+
+	UFUNCTION()
+	void OnRep_MatchState();
 };
