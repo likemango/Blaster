@@ -35,6 +35,7 @@ void ABlasterPlayerController::Tick(float DeltaSeconds)
 
 	CheckTimeSync(DeltaSeconds);
 	SetHUDTime();
+	PollInit();
 }
 
 void ABlasterPlayerController::CheckTimeSync(float TimeDelta)
@@ -71,6 +72,11 @@ void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 		FString HealthText = FString::Printf(TEXT("%d/%d"),FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
 		BlasterHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
+	else
+	{
+		HUDHealth = Health;
+		HUDMaxHealth = MaxHealth;
+	}
 }
 
 void ABlasterPlayerController::SetScore(float NewScore)
@@ -83,6 +89,10 @@ void ABlasterPlayerController::SetScore(float NewScore)
 		FString NewScoreText = FString::Printf(TEXT("%d"),FMath::FloorToInt(NewScore));
 		BlasterHUD->CharacterOverlay->ScoreText->SetText(FText::FromString(NewScoreText));
 	}
+	else
+	{
+		HUDScores = NewScore;
+	}
 }
 
 void ABlasterPlayerController::SetDefeats(int32 NewDefeats)
@@ -94,6 +104,10 @@ void ABlasterPlayerController::SetDefeats(int32 NewDefeats)
 	{
 		FString NewDefeatsText = FString::Printf(TEXT("%d"),NewDefeats);
 		BlasterHUD->CharacterOverlay->DefeatsText->SetText(FText::FromString(NewDefeatsText));
+	}
+	else
+	{
+		HUDDefeats = NewDefeats;
 	}
 }
 
@@ -202,6 +216,24 @@ void ABlasterPlayerController::OnRep_MatchState()
 		if (BlasterHUD)
 		{
 			BlasterHUD->AddCharacterOverlay();
+		}
+	}
+}
+
+void ABlasterPlayerController::PollInit()
+{
+	if(!CharacterOverlay)
+	{
+		if(GetHUD())
+		{
+			CharacterOverlay = Cast<ABlasterHUD>(GetHUD())->CharacterOverlay;
+			if(CharacterOverlay)
+			{
+				SetHUDHealth(HUDHealth, HUDMaxHealth);
+				SetScore(HUDScores);
+				SetDefeats(HUDDefeats);
+				bInitializeCharacterOverlay = true;
+			}
 		}
 	}
 }

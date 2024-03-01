@@ -59,4 +59,14 @@ private:
 
 	UFUNCTION()
 	void OnRep_MatchState();
+
+	UPROPERTY()
+	class UCharacterOverlay* CharacterOverlay;
+
+	bool bInitializeCharacterOverlay  = false;
+	void PollInit();
+	float HUDHealth;
+	float HUDMaxHealth;
+	float HUDScores;
+	int32 HUDDefeats;
 };
