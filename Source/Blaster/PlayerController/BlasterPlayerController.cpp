@@ -10,27 +10,42 @@
 #include "Components/TextBlock.h"
 #include "Blaster/GameModes/BlasterGameMode.h"
 #include "Blaster/HUD/Announcement.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+
+void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterPlayerController, MatchState);
+}
 
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
-	if(BlasterHUD)
-	{
-		BlasterHUD->AddAnnouncementOverlay();
-	}
+	ServerCheckMatchState();
 }
 
 void ABlasterPlayerController::SetHUDTime()
 {
-	uint32 CurrentSecond = FMath::FloorToInt(MatchTime - GetServerTime());
-	if(CurrentSecond != SecondsLeft)
+	float TimeLeft = 0.f;
+	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+	if (CountdownInt != SecondsLeft)
 	{
-		// it past more a second
 		SetHUDMatchCountDown(MatchTime - GetServerTime());
+		if (MatchState == MatchState::WaitingToStart)
+		{
+			SetHUDAnnouncementCountdown(TimeLeft);
+		}
+		if (MatchState == MatchState::InProgress)
+		{
+			SetHUDMatchCountDown(TimeLeft);
+		}
 	}
-	SecondsLeft = CurrentSecond;
+	CountdownInt = SecondsLeft;
 }
 
 void ABlasterPlayerController::Tick(float DeltaSeconds)
@@ -40,6 +55,33 @@ void ABlasterPlayerController::Tick(float DeltaSeconds)
 	CheckTimeSync(DeltaSeconds);
 	SetHUDTime();
 	PollInit();
+}
+
+//当任何玩家加入到一场对局中时，都需要知道这些信息
+void ABlasterPlayerController::ServerCheckMatchState_Implementation()
+{
+	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		WarmupTime = GameMode->WarmupTime;
+		MatchTime = GameMode->MatchTime;
+		LevelStartingTime = GameMode->LevelBeginTime;
+		MatchState = GameMode->GetMatchState();
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+	}
+}
+
+void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match,float StartingTime)
+{
+	WarmupTime = Warmup;
+	MatchTime = Match;
+	LevelStartingTime = StartingTime;
+	MatchState = StateOfMatch;
+	OnMatchStateSet(MatchState);
+	if (BlasterHUD && MatchState == MatchState::WaitingToStart)
+	{
+		BlasterHUD->AddAnnouncementOverlay();
+	}
 }
 
 void ABlasterPlayerController::CheckTimeSync(float TimeDelta)
@@ -153,6 +195,20 @@ void ABlasterPlayerController::SetHUDMatchCountDown(float TimeSeconds)
 	}
 }
 
+void ABlasterPlayerController::SetHUDAnnouncementCountdown(float TimeSeconds)
+{
+	BlasterHUD = BlasterHUD ? BlasterHUD : Cast<ABlasterHUD>(GetHUD());
+	bool bHUDValid = BlasterHUD && BlasterHUD->AnnouncementOverlay &&
+		BlasterHUD->AnnouncementOverlay->WarmupTime;
+	if(bHUDValid)
+	{
+		int32 Mines = FMath::FloorToInt(TimeSeconds / 60.f);
+		int32 Seconds = TimeSeconds - Mines * 60;
+		FString NewMatchTimeText = FString::Printf(TEXT("%02d:%02d"), Mines, Seconds);
+		BlasterHUD->AnnouncementOverlay->WarmupTime->SetText(FText::FromString(NewMatchTimeText));
+	}
+}
+
 void ABlasterPlayerController::ReceivedPlayer()
 {
 	Super::ReceivedPlayer();
@@ -162,13 +218,6 @@ void ABlasterPlayerController::ReceivedPlayer()
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 	}
-}
-
-void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ABlasterPlayerController, MatchState);
 }
 
 float ABlasterPlayerController::GetServerTime() const
@@ -200,6 +249,7 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(float Clien
 
 void ABlasterPlayerController::HandleMatchHasStarted()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Called!!"));
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD)
 	{
@@ -211,7 +261,7 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 	}
 }
 
-void ABlasterPlayerController::SetMatchState(FName NewState)
+void ABlasterPlayerController::OnMatchStateSet(FName NewState)
 {
 	MatchState = NewState;
 

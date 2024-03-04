@@ -35,8 +35,7 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 	}
 }
 
-void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, ABlasterPlayerController* VictimController,
-	ABlasterPlayerController* AttackerController)
+void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
 {
 	ABlasterPlayerState* AttackerPlayerState = AttackerController ? Cast<ABlasterPlayerState>(AttackerController->PlayerState) : nullptr;
 	ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
@@ -81,7 +80,7 @@ void ABlasterGameMode::OnMatchStateSet()
 		ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(*It);
 		if(BlasterPlayerController)
 		{
-			BlasterPlayerController->SetMatchState(MatchState);
+			BlasterPlayerController->OnMatchStateSet(MatchState);
 		}
 	}
 }

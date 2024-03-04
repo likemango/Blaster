@@ -25,21 +25,28 @@ public:
 	void SetHUDWeaponAmmo(int32 NewWeaponAmmo);
 	void SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo);
 	void SetHUDMatchCountDown(float TimeSeconds);
+	void SetHUDAnnouncementCountdown(float TimeSeconds);
 	float GetServerTime() const;
 	void HandleMatchHasStarted();
-	void SetMatchState(FName NewState);
+	void OnMatchStateSet(FName NewState);
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
 	virtual void Tick(float DeltaSeconds) override;
 	
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
+	UFUNCTION(Client, Reliable)
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime);
+	
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
-	float MatchTime = 120.f;
-
-	uint32 SecondsLeft = 0;
+	float LevelStartingTime = 0.f;
+	float MatchTime = 0.f;
+	float WarmupTime = 0.f;
+	uint32 CountdownInt = 0;
 
 	UFUNCTION(Server,Reliable)
 	void ServerRequestServerTime(float ClientRequestTime); // client send request to server
