@@ -30,6 +30,7 @@ public:
 	float CoolDownTime = 10.f;
 	
 	float LevelBeginTime = 0.f;
+	FORCEINLINE float GetCountDownTime() const { return CountDownTime;}
 
 protected:
 	virtual void BeginPlay() override;

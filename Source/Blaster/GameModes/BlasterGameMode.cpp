@@ -46,6 +46,14 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 			SetMatchState(MatchState::CoolDown);
 		}
 	}
+	else if(MatchState == MatchState::CoolDown)
+	{
+		CountDownTime = CoolDownTime + WarmupTime + MatchTime -  GetWorld()->GetTimeSeconds() + LevelBeginTime;
+		if(CountDownTime <= 0.f)
+		{
+			// SetMatchState(MatchState::CoolDown);
+		}
+	}
 }
 
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
