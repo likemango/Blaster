@@ -71,6 +71,11 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterCharacter, Health);
 }
 
+void ABlasterCharacter::SetIsInCoolDownState(bool NewState)
+{
+	bInCoolDownTime = NewState;
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -313,6 +318,12 @@ void ABlasterCharacter::MulticastEliminate_Implementation()
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
 	}
 	StartDissolve();
+
+	if(Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
+	
 	// Disable character movement
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
@@ -538,6 +549,10 @@ FVector ABlasterCharacter::GetHitTarget() const
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
+	if(bInCoolDownTime)
+	{
+		return;
+	}
 	Health = FMath::Clamp(Health-Damage, 0, MaxHealth);
 	UpdateHealthHUD();
 	PlayHitReactMontage();
@@ -562,7 +577,7 @@ void ABlasterCharacter::OnRep_Health()
 void ABlasterCharacter::OnRespawnTimerFinished()
 {
 	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-	if(BlasterGameMode)
+	if(BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::CoolDown)
 	{
 		BlasterGameMode->RespawnCharacter(this, Controller);
 	}

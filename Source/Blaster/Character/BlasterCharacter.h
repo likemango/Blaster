@@ -37,6 +37,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastEliminate();
 
+	void SetIsInCoolDownState(bool NewState);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
@@ -168,6 +170,10 @@ private:
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
+
+	// at this moment, character is undefeatable!
+	UPROPERTY(Replicated)
+	bool bInCoolDownTime;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

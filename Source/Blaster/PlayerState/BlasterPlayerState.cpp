@@ -20,7 +20,7 @@ void ABlasterPlayerState::AddToScore(float ScoreAmount)
 			BlasterController = BlasterController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterController;
 			if(BlasterController)
 			{
-				BlasterController->SetScore(NewScore);
+				BlasterController->SetHUDScore(NewScore);
 			}
 		}
 	}
@@ -38,7 +38,7 @@ void ABlasterPlayerState::AddToDefeats(int32 DefeatAmount)
 			BlasterController = BlasterController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterController;
 			if(BlasterController)
 			{
-				BlasterController->SetDefeats(Defeats);
+				BlasterController->SetHUDDefeats(Defeats);
 			}
 		}
 	}	
@@ -64,7 +64,7 @@ void ABlasterPlayerState::OnRep_Score()
 			BlasterController = BlasterController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterController;
 			if(BlasterController)
 			{
-				BlasterController->SetScore(GetScore());
+				BlasterController->SetHUDScore(GetScore());
 			}
 		}
 	}	
@@ -80,7 +80,7 @@ void ABlasterPlayerState::OnRep_Defeats()
 			BlasterController = BlasterController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterController;
 			if(BlasterController)
 			{
-				BlasterController->SetDefeats(Defeats);
+				BlasterController->SetHUDDefeats(Defeats);
 			}
 		}
 	}	

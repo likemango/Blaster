@@ -9,7 +9,9 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Blaster/GameModes/BlasterGameMode.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/HUD/Announcement.h"
+#include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
@@ -147,7 +149,7 @@ void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 }
 
-void ABlasterPlayerController::SetScore(float NewScore)
+void ABlasterPlayerController::SetHUDScore(float NewScore)
 {
 	BlasterHUD = BlasterHUD ? BlasterHUD : Cast<ABlasterHUD>(GetHUD());
 	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay &&
@@ -163,7 +165,7 @@ void ABlasterPlayerController::SetScore(float NewScore)
 	}
 }
 
-void ABlasterPlayerController::SetDefeats(int32 NewDefeats)
+void ABlasterPlayerController::SetHUDDefeats(int32 NewDefeats)
 {
 	BlasterHUD = BlasterHUD ? BlasterHUD : Cast<ABlasterHUD>(GetHUD());
 	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay &&
@@ -310,8 +312,43 @@ void ABlasterPlayerController::HandleMatchCoolDown()
 			BlasterHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Visible);
 			FString CoolDownString = FString::Printf(TEXT("New Game Start In:"));
 			BlasterHUD->AnnouncementOverlay->AnnouncementText->SetText(FText::FromString(CoolDownString));
-			BlasterHUD->AnnouncementOverlay->InfoText->SetText(FText());
+			
+			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+			ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+			if (BlasterGameState && BlasterPlayerState)
+			{
+				TArray<ABlasterPlayerState*> TopPlayers = BlasterGameState->TopScoringPlayers;
+				FString InfoTextString;
+				if (TopPlayers.Num() == 0)
+				{
+					InfoTextString = FString("There is no winner.");
+				}
+				else if (TopPlayers.Num() == 1 && TopPlayers[0] == BlasterPlayerState)
+				{
+					InfoTextString = FString("You are the winner!");
+				}
+				else if (TopPlayers.Num() == 1)
+				{
+					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
+				}
+				else if (TopPlayers.Num() > 1)
+				{
+					InfoTextString = FString("Players tied for the win:\n");
+					for (auto TiedPlayer : TopPlayers)
+					{
+						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+				}
+
+				BlasterHUD->AnnouncementOverlay->InfoText->SetText(FText::FromString(InfoTextString));
+			}
 		}
+	}
+
+	if(GetPawn())
+	{
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+		BlasterCharacter->SetIsInCoolDownState(true);
 	}
 }
 
@@ -351,8 +388,8 @@ void ABlasterPlayerController::PollInit()
 			if(CharacterOverlay)
 			{
 				SetHUDHealth(HUDHealth, HUDMaxHealth);
-				SetScore(HUDScores);
-				SetDefeats(HUDDefeats);
+				SetHUDScore(HUDScores);
+				SetHUDDefeats(HUDDefeats);
 				bInitializeCharacterOverlay = true;
 			}
 		}
