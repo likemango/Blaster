@@ -28,6 +28,7 @@ public:
 	void SetHUDAnnouncementCountdown(float TimeSeconds);
 	float GetServerTime() const;
 	void HandleMatchHasStarted();
+	void HandleMatchCoolDown();
 	void OnMatchStateSet(FName NewState);
 protected:
 	virtual void BeginPlay() override;

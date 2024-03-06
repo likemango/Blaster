@@ -25,6 +25,7 @@ void ABlasterPlayerController::BeginPlay()
 	Super::BeginPlay();
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckMatchState();
+	// UE_LOG(LogTemp, Warning, TEXT("ABlasterPlayerController::BeginPlay Called!"))
 }
 
 void ABlasterPlayerController::SetHUDTime()
@@ -249,7 +250,6 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(float Clien
 
 void ABlasterPlayerController::HandleMatchHasStarted()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Called!!"));
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD)
 	{
@@ -257,6 +257,22 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 		if(BlasterHUD->AnnouncementOverlay)
 		{
 			BlasterHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
+
+void ABlasterPlayerController::HandleMatchCoolDown()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD)
+	{
+		if(BlasterHUD->CharacterOverlay)
+		{
+			BlasterHUD->CharacterOverlay->RemoveFromParent();
+		}
+		if(BlasterHUD->AnnouncementOverlay)
+		{
+			BlasterHUD->AnnouncementOverlay->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
 }
@@ -269,6 +285,10 @@ void ABlasterPlayerController::OnMatchStateSet(FName NewState)
 	{
 		HandleMatchHasStarted();
 	}
+	else if(MatchState == MatchState::CoolDown)
+	{
+		HandleMatchCoolDown();
+	}
 }
 
 void ABlasterPlayerController::OnRep_MatchState()
@@ -276,6 +296,10 @@ void ABlasterPlayerController::OnRep_MatchState()
 	if(MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
+	}
+	else if(MatchState == MatchState::CoolDown)
+	{
+		HandleMatchCoolDown();
 	}
 }
 
