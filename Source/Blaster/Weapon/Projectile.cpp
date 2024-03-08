@@ -33,10 +33,10 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(ParticleSystem)
+	if(ProjectileTrace)
 	{
 		ParticleSystemComponent = UGameplayStatics::SpawnEmitterAttached(
-				ParticleSystem,
+				ProjectileTrace,
 				BoxComponent,
 				FName(),
 				GetActorLocation(),

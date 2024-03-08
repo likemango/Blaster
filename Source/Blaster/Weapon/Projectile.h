@@ -30,7 +30,7 @@ protected:
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* ParticleSystem;
+	class UParticleSystem* ProjectileTrace;
 
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* HitParticle;
@@ -41,6 +41,6 @@ protected:
 	UPROPERTY()
 	UParticleSystemComponent* ParticleSystemComponent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere,Category=Damage)
 	float DamageValue = 20.f;
 };
