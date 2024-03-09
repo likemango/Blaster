@@ -5,6 +5,7 @@
 
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "RocketProjectileMovement.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -17,6 +18,10 @@ AProjectileRocket::AProjectileRocket()
 	
 	RocketMesh = CreateDefaultSubobject<UStaticMeshComponent>("RocketMesh");
 	RocketMesh->SetupAttachment(RootComponent);
+
+	RocketProjectileMovementComponent = CreateDefaultSubobject<URocketProjectileMovement>("RocketProjectTileMovementComp");
+	RocketProjectileMovementComponent->bRotationFollowsVelocity = true;
+	RocketProjectileMovementComponent->SetIsReplicated(true);
 }
 
 void AProjectileRocket::BeginPlay()
@@ -88,6 +93,7 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			InstigatorController
 		);
 	}
+	
 	GetWorldTimerManager().SetTimer(
 		SmokeTrailDestroyTimer,
 		this,

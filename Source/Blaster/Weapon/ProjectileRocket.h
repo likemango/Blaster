@@ -23,6 +23,8 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* RocketMesh;
+	UPROPERTY(VisibleAnywhere)
+	class URocketProjectileMovement* RocketProjectileMovementComponent;
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* SmokeTrailNiagara;
 	UPROPERTY(EditAnywhere)

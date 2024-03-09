@@ -25,9 +25,6 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* BoxComponent;
-	
-	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ProjectileTrace;

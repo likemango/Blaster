@@ -18,6 +18,7 @@ AWeapon::AWeapon()
 	//开启,则说明只有服务器才有authority,客户端则没有,需要通过replicate来实现同步
 	//未开启,则所有客户端都是独立生成的一份,独立于服务器在客户端上生成,各自都有authority
 	bReplicates = true;
+	Super::SetReplicateMovement(true);
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMesh);
