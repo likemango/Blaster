@@ -8,6 +8,8 @@
 #include "Weapon.generated.h"
 
 
+class USoundCue;
+
 UENUM()
 enum class EWeaponState : int8
 {
@@ -98,6 +100,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed = 20.f;
 
+	UPROPERTY(EditAnywhere)
+	USoundCue* EquipSound;
 	/*
 	 * Weapon Ammo Amount
 	 */
