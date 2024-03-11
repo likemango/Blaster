@@ -39,6 +39,8 @@ public:
 
 	void SetIsInCoolDownState(bool NewState);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bIsAiming);
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;

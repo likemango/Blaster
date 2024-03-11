@@ -341,6 +341,15 @@ void ABlasterCharacter::MulticastEliminate_Implementation()
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ElimBotSound, GetActorLocation());
 	}
+	bool bHideSniperScope = IsLocallyControlled() &&
+		Combat &&
+			Combat->bIsAiming &&
+				Combat->EquippedWeapon &&
+					Combat->EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_SniperRifle;
+	if(bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -509,6 +518,9 @@ void ABlasterCharacter::PlayReloadMontage()
 			SectionName = FName("Rifle");
 			break;
 		case EBlasterWeaponType::EWT_Shotgun:
+			SectionName = FName("Rifle");
+			break;
+		case EBlasterWeaponType::EWT_SniperRifle:
 			SectionName = FName("Rifle");
 			break;
 		}

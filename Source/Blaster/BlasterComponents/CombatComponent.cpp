@@ -266,11 +266,20 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& H
 
 void UCombatComponent::SetIsAiming(bool bIsAim)
 {
+	if(Character == nullptr || EquippedWeapon == nullptr)
+		return;
+	// authorized client do aiming intermediately
 	bIsAiming = bIsAim;
-	Server_SetIsAiming(bIsAim);
 	if(Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	}
+	// then tell server to do the result, and tell other simulated client
+	Server_SetIsAiming(bIsAim);
+
+	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_SniperRifle)
+	{
+		Character->ShowSniperScopeWidget(bIsAiming);
 	}
 }
 void UCombatComponent::Server_SetIsAiming_Implementation(bool bIsAim)
@@ -432,6 +441,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_Pistol, StartingPistolAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SMG, StartingSMGAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SMG, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SniperRifle, StartingSniperAmmo);
 }
 
 void UCombatComponent::OnRep_CombatState()

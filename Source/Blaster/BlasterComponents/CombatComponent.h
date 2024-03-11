@@ -114,7 +114,8 @@ private:
 	int32 StartingSMGAmmo = 0;
 	UPROPERTY(EditAnywhere)
 	int32 StartingShotgunAmmo = 0;
-	
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperAmmo = 0;	
 	// because hash algorithm result changed on server and client, can't be replicated!
 	TMap<EBlasterWeaponType, int32> CarriedAmmoMap;
 	void InitializeCarriedAmmo();
