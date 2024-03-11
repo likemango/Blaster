@@ -6,6 +6,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -14,9 +15,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if(OwnerPawn == nullptr)
 		return;
-	AController* FireInstigator = OwnerPawn->GetController();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
-	if(MuzzleFlashSocket && FireInstigator)
+	if(MuzzleFlashSocket)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 
@@ -32,13 +32,17 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				End,
 				ECC_Visibility
 			);
+			FVector BeamEnd = End;
 			if(FireHit.bBlockingHit && FireHit.GetActor())
 			{
-				ABlasterCharacter* DamageCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-				if(DamageCharacter)
+				BeamEnd = FireHit.ImpactPoint;
+				
+				// only cause damage on server
+				if(HasAuthority())
 				{
-					// only cause damage on server
-					if(HasAuthority())
+					AController* FireInstigator = OwnerPawn->GetController();
+					ABlasterCharacter* DamageCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
+					if(DamageCharacter && FireInstigator)
 					{
 						UGameplayStatics::ApplyDamage(
 					DamageCharacter,
@@ -48,6 +52,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						UDamageType::StaticClass());
 					}
 				}
+				
 				if(ImpactParticle)
 				{
 					UGameplayStatics::SpawnEmitterAtLocation(
@@ -56,6 +61,19 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						FireHit.Location,
 						FireHit.ImpactNormal.Rotation()
 					);
+				}
+
+				if(BeamParticle)
+				{
+					UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
+						World,
+						BeamParticle,
+						SocketTransform
+					);
+					if(Beam)
+					{
+						Beam->SetVectorParameter(FName(TEXT("Target")), BeamEnd);
+					}
 				}
 			}
 		}
