@@ -56,7 +56,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,FActor
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if(Character->IsLocallyControlled())
+	if(Character && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
@@ -429,6 +429,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_AssaultRifle, StartingARAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_Pistol, StartingPistolAmmo);
 }
 
 void UCombatComponent::OnRep_CombatState()
