@@ -65,9 +65,6 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_EquipWeapon)
 	AWeapon* EquippedWeapon;
 
-	UPROPERTY(EditAnywhere)
-	class USoundCue* EquipWeaponSound;
-
 	UPROPERTY(Replicated)
 	bool bIsAiming;
 
@@ -115,6 +112,8 @@ private:
 	int32 StartingRocketAmmo = 4; // rocket
 	UPROPERTY(EditAnywhere)
 	int32 StartingPistolAmmo = 15;
+	UPROPERTY(EditAnywhere)
+	int32 StartingSMGAmmo = 20;
 	// because hash algorithm result changed on server and client, can't be replicated!
 	TMap<EBlasterWeaponType, int32> CarriedAmmoMap;
 	void InitializeCarriedAmmo();

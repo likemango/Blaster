@@ -291,11 +291,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		EquippedWeapon->Dropped();
 	}
 	EquippedWeapon = WeaponToEquip;
-	if(EquipWeaponSound)
+	if(EquippedWeapon->GetEquipSound())
 	{
 		UGameplayStatics::PlaySoundAtLocation(
 			this,
-			EquipWeaponSound,
+			EquippedWeapon->GetEquipSound(),
 			Character->GetActorLocation());
 	}
 	
@@ -410,7 +410,7 @@ void UCombatComponent::OnRep_EquipWeapon() const
 
 		UGameplayStatics::PlaySoundAtLocation(
 			this,
-			EquipWeaponSound,
+			EquippedWeapon->GetEquipSound(),
 			Character->GetActorLocation());
 	}
 }
@@ -430,6 +430,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_AssaultRifle, StartingARAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_Pistol, StartingPistolAmmo);
+	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SMG, StartingSMGAmmo);
 }
 
 void UCombatComponent::OnRep_CombatState()
