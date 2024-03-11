@@ -9,8 +9,6 @@
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
-#define TRACE_LINE_LENGTH 80000.0f;
-
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BLASTER_API UCombatComponent : public UActorComponent
 {
@@ -107,13 +105,16 @@ private:
 	void OnRep_CarriedAmmo();
 
 	UPROPERTY(EditAnywhere)
-	int32 StartingARAmmo = 30; // Assult Rifle
+	int32 StartingARAmmo = 0; // Assult Rifle
 	UPROPERTY(EditAnywhere)
-	int32 StartingRocketAmmo = 4; // rocket
+	int32 StartingRocketAmmo = 0; // rocket
 	UPROPERTY(EditAnywhere)
-	int32 StartingPistolAmmo = 15;
+	int32 StartingPistolAmmo = 0;
 	UPROPERTY(EditAnywhere)
-	int32 StartingSMGAmmo = 20;
+	int32 StartingSMGAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 0;
+	
 	// because hash algorithm result changed on server and client, can't be replicated!
 	TMap<EBlasterWeaponType, int32> CarriedAmmoMap;
 	void InitializeCarriedAmmo();
