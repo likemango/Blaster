@@ -307,7 +307,8 @@ void UCombatComponent::Server_SetIsAiming_Implementation(bool bIsAim)
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
-	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	if(Character == nullptr || WeaponToEquip == nullptr) return;
+	if(CombatState != ECombatState::ECS_Unoccupied) return;
 
 	if(EquippedWeapon != nullptr)
 	{
@@ -355,7 +356,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::Reload()
 {
-	if(CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
+	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		ServerReload();
 	}
@@ -433,12 +434,44 @@ void UCombatComponent::ShotgunShellReload()
 	}
 }
 
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+}
+
 void UCombatComponent::ShotgunReloadJumpToEnd()
 {
 	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
 	if(AnimInstance && Character->GetReloadMontage())
 	{
 		AnimInstance->Montage_JumpToSection("ShotgunEnd");
+	}
+}
+
+void UCombatComponent::ThrowGrenade()
+{
+	if(CombatState != ECombatState::ECS_Unoccupied)
+		return;
+
+	// authorized client do first
+	CombatState = ECombatState::ECS_ThrowGrenade;
+	if(Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+	}
+	if(Character && !Character->HasAuthority())
+	{
+		ServerThrowGrenade();
+	}
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation()
+{
+	// server do next, OnRep function let simulated client do finally
+	CombatState = ECombatState::ECS_ThrowGrenade;
+	if(Character)
+	{
+		Character->PlayThrowGrenadeMontage();
 	}
 }
 
@@ -514,6 +547,12 @@ void UCombatComponent::OnRep_CombatState()
 		if(bFireButtonPressed)
 		{
 			Fire();
+		}
+		break;
+	case ECombatState::ECS_ThrowGrenade:
+		if(Character)
+		{
+			Character->PlayThrowGrenadeMontage();
 		}
 		break;
 	}

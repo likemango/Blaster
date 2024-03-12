@@ -24,8 +24,8 @@ public:
 	// only execute on the server
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 	void Reload();
-	
 	void ShotgunReloadJumpToEnd();
+	void ThrowGrenade();
 
 protected:
 	virtual void BeginPlay() override;
@@ -53,6 +53,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
+
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
 
 private:
 	UPROPERTY()
@@ -143,4 +146,7 @@ private:
 
 	UFUNCTION(BlueprintCallable)
 	void ShotgunShellReload();
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
 };

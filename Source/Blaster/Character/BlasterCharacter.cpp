@@ -371,6 +371,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ThisClass::FirePressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ThisClass::FireReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Released, this, &ThisClass::ReloadButtonPressed);
+	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ThisClass::ThrowGrenadePressed);
 }
 void ABlasterCharacter::MoveForward(float Value)
 {
@@ -438,6 +439,14 @@ void ABlasterCharacter::ReloadButtonPressed()
 	if(Combat)
 	{
 		Combat->Reload();
+	}
+}
+
+void ABlasterCharacter::ThrowGrenadePressed()
+{
+	if(Combat)
+	{
+		Combat->ThrowGrenade();
 	}
 }
 
@@ -531,7 +540,7 @@ void ABlasterCharacter::PlayReloadMontage()
 	}
 }
 
-void ABlasterCharacter::PlayElimMontage()
+void ABlasterCharacter::PlayElimMontage() const
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if(AnimInstance && EliminateMontage)
@@ -540,7 +549,16 @@ void ABlasterCharacter::PlayElimMontage()
 	}
 }
 
-void ABlasterCharacter::PlayHitReactMontage()
+void ABlasterCharacter::PlayThrowGrenadeMontage() const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
+void ABlasterCharacter::PlayHitReactMontage() const
 {
 	if(!Combat || !Combat->EquippedWeapon) return;
 

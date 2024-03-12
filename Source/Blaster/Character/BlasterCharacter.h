@@ -27,7 +27,8 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
-	void PlayElimMontage();
+	void PlayElimMontage() const;
+	void PlayThrowGrenadeMontage() const;
 	
 	FVector GetHitTarget() const;
 	virtual void OnRep_ReplicatedMovement() override;
@@ -53,6 +54,7 @@ protected:
 	void CrouchPressed();
 	void CrouchReleased();
 	void ReloadButtonPressed();
+	void ThrowGrenadePressed();
 	void AimPressed();
 	void AimReleased();
 	void CalculateAO_Pitch();
@@ -60,7 +62,7 @@ protected:
 	virtual void Jump() override;
 	void FirePressed();
 	void FireReleased();
-	void PlayHitReactMontage();
+	void PlayHitReactMontage() const;
 	// poll init for some classes which is not ready when character BeginPlay()
 	void PollInit();
 private:
@@ -104,6 +106,8 @@ private:
 	class UAnimMontage* HitReactMontage;
 	UPROPERTY(EditAnywhere, Category=Combat)
 	class UAnimMontage* EliminateMontage;
+	UPROPERTY(EditAnywhere, Category=Combat)
+	class UAnimMontage* ThrowGrenadeMontage;
 	
 	void HideCameraIfCharacterClose();
 	UPROPERTY(EditAnywhere)
