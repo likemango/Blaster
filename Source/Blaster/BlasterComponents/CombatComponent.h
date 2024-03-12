@@ -136,6 +136,6 @@ private:
 	void UpdateAmmoValues();
 	
 	UFUNCTION(BlueprintCallable)
-	void FinishReloading();
+	void ReloadFinished();
 
 };

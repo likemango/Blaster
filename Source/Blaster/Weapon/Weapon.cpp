@@ -3,7 +3,7 @@
 
 #include "Weapon.h"
 
-#include "Casing.h"
+#include "Blaster/Weapon/Casing/Casing.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/SphereComponent.h"
@@ -134,7 +134,7 @@ void AWeapon::SetWeaponState(EWeaponState NewState)
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if(WeaponType == EBlasterWeaponType::EWT_SMG)
+		if(WeaponType == EBlasterWeaponType::EWT_SubmachineGun)
 		{
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetEnableGravity(true);
@@ -164,7 +164,7 @@ void AWeapon::OnRep_WeaponState()
 		ShowPickupWidget(false);
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);if(WeaponType == EBlasterWeaponType::EWT_SMG)
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);if(WeaponType == EBlasterWeaponType::EWT_SubmachineGun)
 		{
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetEnableGravity(true);
@@ -254,4 +254,9 @@ void AWeapon::OnRep_Owner()
 bool AWeapon::IsEmpty() const
 {
 	return Ammo <= 0;
+}
+
+bool AWeapon::IsFull() const
+{
+	return Ammo == MagCapacity;
 }

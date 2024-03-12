@@ -131,6 +131,7 @@ public:
 	FORCEINLINE bool IsAutomatic() const { return bAutomatic;}
 	FORCEINLINE float GetFireInterval() const { return FireInterval;}
 	bool IsEmpty() const;
+	bool IsFull() const;
 	FORCEINLINE EBlasterWeaponType GetWeaponType() const { return WeaponType;}
 	FORCEINLINE int32 GetAmmo() const { return Ammo;}
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity;}

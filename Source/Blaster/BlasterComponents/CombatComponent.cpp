@@ -349,7 +349,7 @@ void UCombatComponent::Reload()
 
 void UCombatComponent::ServerReload_Implementation()
 {
-	if(!Character || !EquippedWeapon) return;
+	if(!Character || !EquippedWeapon || EquippedWeapon->IsFull()) return;
 	
 	CombatState = ECombatState::ECS_Reloading;
 	HandleReload();
@@ -390,7 +390,7 @@ void UCombatComponent::UpdateAmmoValues()
 	EquippedWeapon->AddAmmo(ReloadAmount);
 }
 
-void UCombatComponent::FinishReloading()
+void UCombatComponent::ReloadFinished()
 {
 	if(Character && Character->HasAuthority())
 	{
@@ -439,8 +439,8 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_AssaultRifle, StartingAssaultRifleAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_Pistol, StartingPistolAmmo);
-	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SMG, StartingSMGAmmo);
-	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SMG, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_Shotgun, StartingShotgunAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SniperRifle, StartingSniperAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
 }
