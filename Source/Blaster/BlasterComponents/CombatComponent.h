@@ -25,6 +25,8 @@ public:
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 	void Reload();
 	
+	void ShotgunReloadJumpToEnd();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -134,8 +136,11 @@ private:
 	int32 AmountToReload();
 
 	void UpdateAmmoValues();
+	void UpdateShotgunAmmoValues();
 	
 	UFUNCTION(BlueprintCallable)
 	void ReloadFinished();
 
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
 };

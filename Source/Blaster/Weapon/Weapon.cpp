@@ -94,14 +94,22 @@ void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverLappedComponent, AActo
 
 void AWeapon::SpendRound()
 {
-	UE_LOG(LogTemp, Warning, TEXT("--WeaponAmmo"));
 	Ammo = FMath::Clamp(Ammo-1, 0, MagCapacity);
 	SetHUDAmmo();
 }
 
 void AWeapon::OnRep_WeaponAmmo()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRep --WeaponAmmo"));
+	BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterCharacter;
+	bool bJumpToShotgunEnd = BlasterCharacter &&
+		BlasterCharacter->GetCombat() &&
+			BlasterCharacter->GetCombatState() == ECombatState::ECS_Reloading &&
+				WeaponType == EBlasterWeaponType::EWT_Shotgun &&
+					IsFull();
+	if(bJumpToShotgunEnd)
+	{
+		BlasterCharacter->GetCombat()->ShotgunReloadJumpToEnd();
+	}
 	SetHUDAmmo();
 }
 
