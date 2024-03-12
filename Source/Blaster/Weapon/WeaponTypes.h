@@ -11,5 +11,7 @@ enum class EBlasterWeaponType : uint8
 	EWT_SMG UMETA(DisplayName = "SubmachineGun"),
 	EWT_Shotgun UMETA(DisplayName = "Shotgun"),
 	EWT_SniperRifle UMETA(DisplayName = "SniperRifle"),
+	EWT_GrenadeLauncher UMETA(DisplayName = "GrenadeLauncher"),
+	
 	EWT_MAX UMETA(DisplayName = "DefaultMax")
 };

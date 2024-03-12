@@ -105,7 +105,7 @@ private:
 	void OnRep_CarriedAmmo();
 
 	UPROPERTY(EditAnywhere)
-	int32 StartingARAmmo = 0; // Assult Rifle
+	int32 StartingAssaultRifleAmmo = 0; // Assult Rifle
 	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo = 0; // rocket
 	UPROPERTY(EditAnywhere)
@@ -115,7 +115,10 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingShotgunAmmo = 0;
 	UPROPERTY(EditAnywhere)
-	int32 StartingSniperAmmo = 0;	
+	int32 StartingSniperAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeAmmo = 0;
+	
 	// because hash algorithm result changed on server and client, can't be replicated!
 	TMap<EBlasterWeaponType, int32> CarriedAmmoMap;
 	void InitializeCarriedAmmo();

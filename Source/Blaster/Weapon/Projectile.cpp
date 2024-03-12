@@ -3,9 +3,9 @@
 
 #include "Projectile.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Blaster/Blaster.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 
@@ -30,10 +30,10 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(ProjectileTrace)
+	if(Tracer)
 	{
 		ParticleSystemComponent = UGameplayStatics::SpawnEmitterAttached(
-				ProjectileTrace,
+				Tracer,
 				BoxComponent,
 				FName(),
 				GetActorLocation(),
@@ -51,17 +51,68 @@ void AProjectile::Destroyed()
 {
 	Super::Destroyed();
 
-	if(HitParticle)
+	if(ImpactParticle)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, GetActorTransform());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorTransform());
 	}
-	if(HitSoundCue)
+	if(ImpactSoundCue)
 	{
-		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), HitSoundCue, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSoundCue, GetActorLocation());
 	}
 }
 
+void AProjectile::SpawnTrailSystem()
+{
+	if(TrailNiagaraSystem)
+	{
+		SmokeTrailComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+		TrailNiagaraSystem,
+		GetRootComponent(),
+		FName(),
+		GetActorLocation(),
+		GetActorRotation(),
+		EAttachLocation::KeepWorldPosition,
+		false);
+	}
+}
+
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(
+	DestroyTimer,
+	this,
+	&AProjectile::OnDestroyTimeFinished, DestroyTime);
+}
+
+void AProjectile::ExplodeDamage()
+{
+	APlayerController* InstigatorController = nullptr;
+	if(GetInstigator())
+	{
+		InstigatorController = Cast<APlayerController>(GetInstigator()->GetController());
+	}
+	// 使用虚幻自带的damage逻辑
+	UGameplayStatics::ApplyRadialDamageWithFalloff(
+		this,
+		DamageValue,
+		MinDamage,
+		GetActorLocation(),
+		InnerRadius,
+		OuterRadius,
+		Falloff,
+		UDamageType::StaticClass(),
+		TArray<AActor*>(),
+		this,
+		InstigatorController
+	);
+}
+
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	Destroyed();
+}
+
+void AProjectile::OnDestroyTimeFinished()
 {
 	Destroyed();
 }

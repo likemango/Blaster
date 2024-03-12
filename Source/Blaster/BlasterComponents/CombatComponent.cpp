@@ -436,12 +436,13 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::InitializeCarriedAmmo()
 {
-	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_AssaultRifle, StartingAssaultRifleAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_Pistol, StartingPistolAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SMG, StartingSMGAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SMG, StartingShotgunAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
 }
 
 void UCombatComponent::OnRep_CombatState()

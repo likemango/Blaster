@@ -18,6 +18,9 @@ protected:
 	virtual void BeginPlay() override;
 	//for replicated actor, destroyed function gonna be called in all clients!
 	virtual void Destroyed() override;
+	void SpawnTrailSystem();
+	void StartDestroyTimer();
+	void ExplodeDamage();
 	
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -27,17 +30,45 @@ protected:
 	class UBoxComponent* BoxComponent;
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* ProjectileTrace;
+	class UParticleSystem* Tracer;
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* HitParticle;
+	class UParticleSystem* ImpactParticle;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* HitSoundCue;
+	class USoundCue* ImpactSoundCue;
 
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailNiagaraSystem;
+	
+	UPROPERTY()
+	class UNiagaraComponent* SmokeTrailComponent;
+	
 	UPROPERTY()
 	UParticleSystemComponent* ParticleSystemComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ProjectileMesh;
+
 	UPROPERTY(EditAnywhere,Category=Damage)
 	float DamageValue = 20.f;
+
+	/*
+	 * explode damage
+	 */
+	UPROPERTY(EditAnywhere,Category=Damage)
+	float MinDamage = 10.f;
+	UPROPERTY(EditAnywhere,Category=Damage)
+	float InnerRadius = 200.f;
+	UPROPERTY(EditAnywhere,Category=Damage)
+	float OuterRadius = 500.f;
+	UPROPERTY(EditAnywhere,Category=Damage)
+	float Falloff = 1.f;
+	
+private:
+	FTimerHandle DestroyTimer;
+	void OnDestroyTimeFinished();
+	UPROPERTY(EditAnywhere)
+	float DestroyTime = 3.0f;
+	
 };
