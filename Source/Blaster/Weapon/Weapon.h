@@ -120,6 +120,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EBlasterWeaponType WeaponType;
+
+	void EnableCustomDepth(bool bEnable) const;
 	
 public:
 	void SetWeaponState(EWeaponState NewState);
