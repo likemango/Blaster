@@ -61,6 +61,10 @@ ABlasterCharacter::ABlasterCharacter()
 	// always spawn character
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+
+	GrenadeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GrenadeMesh"));
+	GrenadeMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GrenadeMesh->SetupAttachment(GetMesh(), FName(TEXT("GrenadeSocket")));
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

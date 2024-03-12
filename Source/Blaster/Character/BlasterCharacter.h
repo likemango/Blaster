@@ -77,6 +77,8 @@ private:
 	class AWeapon* OverlappingWeapon;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UCombatComponent* Combat;
+	UPROPERTY(VisibleAnywhere)
+	class UStaticMeshComponent* GrenadeMesh;
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);

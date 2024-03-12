@@ -330,7 +330,7 @@ void UCombatComponent::DropEquippedWeapon()
 
 void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach) const
 {
-	if(Character == nullptr || Character->GetMesh() == nullptr)
+	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr)
 		return;
 	
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
@@ -343,7 +343,7 @@ void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach) const
 
 void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach) const
 {
-	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr || EquippedWeapon == nullptr)
+	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr)
 		return;
 	bool bUsePistolSocket = EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_Pistol ||
 		EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_SubmachineGun;
@@ -390,7 +390,7 @@ void UCombatComponent::ReloadEmptyWeapon()
 
 void UCombatComponent::Reload()
 {
-	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied)
+	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull())
 	{
 		ServerReload();
 	}
@@ -398,7 +398,7 @@ void UCombatComponent::Reload()
 
 void UCombatComponent::ServerReload_Implementation()
 {
-	if(!Character || !EquippedWeapon || EquippedWeapon->IsFull()) return;
+	if(!Character || !EquippedWeapon) return;
 	
 	CombatState = ECombatState::ECS_Reloading;
 	HandleReload();
