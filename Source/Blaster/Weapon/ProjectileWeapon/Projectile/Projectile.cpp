@@ -109,11 +109,11 @@ void AProjectile::ExplodeDamage()
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	Destroyed();
+	Destroy();
 }
 
 void AProjectile::OnDestroyTimeFinished()
 {
-	Destroyed();
+	Destroy();
 }
 

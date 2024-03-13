@@ -540,6 +540,19 @@ void UCombatComponent::ThrowGrenade()
 	UpdateHUDThrowGrenadeAmmo();
 }
 
+void UCombatComponent::PickupAmmo(int32 AddAmmoNum, EBlasterWeaponType AddWeaponType)
+{
+	if(CarriedAmmoMap.Contains(AddWeaponType))
+	{
+		CarriedAmmoMap[AddWeaponType] += AddAmmoNum;
+		UpdateCarriedAmmo();
+	}
+	if(EquippedWeapon && EquippedWeapon->GetWeaponType() == AddWeaponType && EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
+}
+
 void UCombatComponent::OnRep_ThrowGrenadeAmmo()
 {
 	UpdateHUDThrowGrenadeAmmo();

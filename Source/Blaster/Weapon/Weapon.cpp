@@ -189,7 +189,8 @@ void AWeapon::OnRep_WeaponState()
 		ShowPickupWidget(false);
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);if(WeaponType == EBlasterWeaponType::EWT_SubmachineGun)
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if(WeaponType == EBlasterWeaponType::EWT_SubmachineGun)
 		{
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetEnableGravity(true);

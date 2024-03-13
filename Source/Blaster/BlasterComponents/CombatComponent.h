@@ -28,7 +28,7 @@ public:
 	void Reload();
 	void ShotgunReloadJumpToEnd();
 	void ThrowGrenade();
-
+	void PickupAmmo(int32 AddAmmoNum, EBlasterWeaponType AddWeaponType);
 protected:
 	virtual void BeginPlay() override;
 

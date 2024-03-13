@@ -51,18 +51,5 @@ void AProjectileGrenade::OnBounce(const FHitResult& ImpactResult, const FVector&
 void AProjectileGrenade::Destroyed()
 {
 	ExplodeDamage();
-	
-	if(ProjectileMesh)
-	{
-		ProjectileMesh->SetVisibility(false);
-	}
-	if(BoxComponent)
-	{
-		BoxComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-	if(SmokeTrailComponent && SmokeTrailComponent->GetSystemInstanceController())
-	{
-		SmokeTrailComponent->Deactivate();
-	}
 	Super::Destroyed();
 }
