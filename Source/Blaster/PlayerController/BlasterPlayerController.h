@@ -24,6 +24,7 @@ public:
 	void SetHUDDefeats(int32 NewDefeats);
 	void SetHUDWeaponAmmo(int32 NewWeaponAmmo);
 	void SetHUDCarriedAmmo(int32 NewWeaponCarriedAmmo);
+	void SetHUDGrenadeAmmo(int32 NewGrenadeAmmo);
 	void SetHUDMatchCountDown(float TimeSeconds);
 	void SetHUDAnnouncementCountdown(float TimeSeconds);
 	float GetServerTime() const;
@@ -83,4 +84,5 @@ private:
 	float HUDMaxHealth;
 	float HUDScores;
 	int32 HUDDefeats;
+	int32 HUDGrenades;
 };

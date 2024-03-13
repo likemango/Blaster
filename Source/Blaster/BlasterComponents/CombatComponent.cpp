@@ -41,6 +41,8 @@ void UCombatComponent::BeginPlay()
 		{
 			InitializeCarriedAmmo();
 		}
+		ThrowGrenadeAmmo = MaxThrowGrenadeAmmo;
+		UpdateHUDThrowGrenadeAmmo();
 	}
 }
 
@@ -52,6 +54,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
+	DOREPLIFETIME(UCombatComponent, ThrowGrenadeAmmo);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction)
@@ -502,9 +505,7 @@ void UCombatComponent::ServerSpawnGrenade_Implementation(const FVector_NetQuanti
 		ActorSpawnParameters.Instigator = Character;
 		const FVector SpawnLocation = Character->GetGrenadeMesh()->GetComponentLocation();
 		const FVector ToTarget = Target - SpawnLocation;
-		AProjectile* SpawnGrenade = GetWorld()->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), ActorSpawnParameters);
-		// ignore collision with self
-		SpawnGrenade->FindComponentByClass<UBoxComponent>()->IgnoreActorWhenMoving(Character,true);
+		GetWorld()->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), ActorSpawnParameters);
 	}
 }
 
@@ -519,7 +520,8 @@ void UCombatComponent::ShotgunReloadJumpToEnd()
 
 void UCombatComponent::ThrowGrenade()
 {
-	if(CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr)
+	if(ThrowGrenadeAmmo<= 0) return;
+	if(CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr )
 		return;
 
 	// authorized client do first
@@ -534,11 +536,27 @@ void UCombatComponent::ThrowGrenade()
 	{
 		ServerThrowGrenade();
 	}
+	ThrowGrenadeAmmo = FMath::Clamp(ThrowGrenadeAmmo - 1, 0, MaxThrowGrenadeAmmo);
+	UpdateHUDThrowGrenadeAmmo();
+}
+
+void UCombatComponent::OnRep_ThrowGrenadeAmmo()
+{
+	UpdateHUDThrowGrenadeAmmo();
+}
+
+void UCombatComponent::UpdateHUDThrowGrenadeAmmo()
+{
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDGrenadeAmmo(ThrowGrenadeAmmo);
+	}
 }
 
 void UCombatComponent::ServerThrowGrenade_Implementation()
 {
-	// server do next, OnRep function let simulated client do finally
+	if(ThrowGrenadeAmmo <= 0) return;
 	CombatState = ECombatState::ECS_ThrowGrenade;
 	if(Character)
 	{
@@ -546,6 +564,8 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 		AttachActorToLeftHand(EquippedWeapon);
 		SetGrenadeVisibility(true);
 	}
+	ThrowGrenadeAmmo = FMath::Clamp(ThrowGrenadeAmmo - 1, 0, MaxThrowGrenadeAmmo);
+	UpdateHUDThrowGrenadeAmmo();
 }
 
 void UCombatComponent::ReloadFinished()
@@ -598,7 +618,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_Shotgun, StartingShotgunAmmo);
 	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_SniperRifle, StartingSniperAmmo);
-	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
+	CarriedAmmoMap.Emplace(EBlasterWeaponType::EWT_GrenadeLauncher, StartingGrenadeLauncherAmmo);
 }
 
 void UCombatComponent::OnRep_CombatState()

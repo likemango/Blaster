@@ -602,6 +602,10 @@ FVector ABlasterCharacter::GetHitTarget() const
 }
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
+	if(bEliminated)
+	{
+		return;
+	}
 	if(bInCoolDownTime)
 	{
 		return;

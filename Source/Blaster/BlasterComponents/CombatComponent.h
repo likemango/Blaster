@@ -134,7 +134,15 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingSniperAmmo = 0;
 	UPROPERTY(EditAnywhere)
-	int32 StartingGrenadeAmmo = 0;
+	int32 StartingGrenadeLauncherAmmo = 0;
+
+	UPROPERTY(ReplicatedUsing=OnRep_ThrowGrenadeAmmo)
+	int32 ThrowGrenadeAmmo = 0;
+	UFUNCTION()
+	void OnRep_ThrowGrenadeAmmo();
+	UPROPERTY(EditAnywhere)
+	int32 MaxThrowGrenadeAmmo = 4;
+	void UpdateHUDThrowGrenadeAmmo();
 	
 	// because hash algorithm result changed on server and client, can't be replicated!
 	TMap<EBlasterWeaponType, int32> CarriedAmmoMap;
@@ -167,4 +175,7 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerSpawnGrenade(const FVector_NetQuantize& Target);
+
+public:	
+	FORCEINLINE int32 GetGrenades() const { return ThrowGrenadeAmmo; }
 };
