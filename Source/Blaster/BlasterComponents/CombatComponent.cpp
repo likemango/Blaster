@@ -6,7 +6,9 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/Weapon/ProjectileWeapon/Projectile/Projectile.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -388,6 +390,14 @@ void UCombatComponent::ReloadEmptyWeapon()
 	}
 }
 
+void UCombatComponent::SetGrenadeVisibility(bool bVisible) const
+{
+	if(Character && Character->GetGrenadeMesh())
+	{
+		Character->GetGrenadeMesh()->SetVisibility(bVisible);
+	}
+}
+
 void UCombatComponent::Reload()
 {
 	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull())
@@ -474,6 +484,30 @@ void UCombatComponent::ThrowGrenadeFinished()
 	AttachActorToRightHand(EquippedWeapon);
 }
 
+void UCombatComponent::SpawnGrenade()
+{
+	SetGrenadeVisibility(false);
+	if(Character && Character->IsLocallyControlled())
+	{
+		ServerSpawnGrenade(LocallyHitTarget);
+	}
+}
+
+void UCombatComponent::ServerSpawnGrenade_Implementation(const FVector_NetQuantize& Target)
+{
+	if(Character && Character->GetGrenadeMesh() && GrenadeClass && GetWorld())
+	{
+		FActorSpawnParameters ActorSpawnParameters;
+		ActorSpawnParameters.Owner = Character;
+		ActorSpawnParameters.Instigator = Character;
+		const FVector SpawnLocation = Character->GetGrenadeMesh()->GetComponentLocation();
+		const FVector ToTarget = Target - SpawnLocation;
+		AProjectile* SpawnGrenade = GetWorld()->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), ActorSpawnParameters);
+		// ignore collision with self
+		SpawnGrenade->FindComponentByClass<UBoxComponent>()->IgnoreActorWhenMoving(Character,true);
+	}
+}
+
 void UCombatComponent::ShotgunReloadJumpToEnd()
 {
 	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
@@ -485,7 +519,7 @@ void UCombatComponent::ShotgunReloadJumpToEnd()
 
 void UCombatComponent::ThrowGrenade()
 {
-	if(CombatState != ECombatState::ECS_Unoccupied)
+	if(CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr)
 		return;
 
 	// authorized client do first
@@ -494,6 +528,7 @@ void UCombatComponent::ThrowGrenade()
 	{
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
+		SetGrenadeVisibility(true);
 	}
 	if(Character && !Character->HasAuthority())
 	{
@@ -509,6 +544,7 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 	{
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
+		SetGrenadeVisibility(true);
 	}
 }
 
@@ -583,6 +619,7 @@ void UCombatComponent::OnRep_CombatState()
 		{
 			Character->PlayThrowGrenadeMontage();
 		}
+		SetGrenadeVisibility(true);
 		break;
 	}
 }

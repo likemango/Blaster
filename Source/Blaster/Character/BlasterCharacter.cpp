@@ -90,6 +90,10 @@ void ABlasterCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
 	}
+	if(GrenadeMesh)
+	{
+		GrenadeMesh->SetVisibility(false);
+	}
 }
 void ABlasterCharacter::UpdateHealthHUD()
 {

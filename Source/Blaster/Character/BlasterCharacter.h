@@ -199,4 +199,5 @@ public:
 	ECombatState GetCombatState() const;
 	FORCEINLINE UAnimMontage* GetReloadMontage() const{ return ReloadMontage;}
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat;}
+	FORCEINLINE UStaticMeshComponent* GetGrenadeMesh() const { return GrenadeMesh;}
 };

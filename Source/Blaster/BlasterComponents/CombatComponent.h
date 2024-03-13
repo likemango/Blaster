@@ -9,6 +9,8 @@
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
+class AProjectile;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BLASTER_API UCombatComponent : public UActorComponent
 {
@@ -63,6 +65,7 @@ protected:
 	void UpdateCarriedAmmo();
 	void PlayEquipWeaponSound() const;
 	void ReloadEmptyWeapon();
+	void SetGrenadeVisibility(bool bVisible) const;
 	
 private:
 	UPROPERTY()
@@ -117,6 +120,8 @@ private:
 	void OnRep_CarriedAmmo();
 
 	UPROPERTY(EditAnywhere)
+	TSubclassOf<AProjectile> GrenadeClass;
+	UPROPERTY(EditAnywhere)
 	int32 StartingAssaultRifleAmmo = 0; // Assult Rifle
 	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo = 0; // rocket
@@ -156,4 +161,10 @@ private:
 
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerSpawnGrenade(const FVector_NetQuantize& Target);
 };
