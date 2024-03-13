@@ -75,8 +75,13 @@ private:
 	
 	UPROPERTY(ReplicatedUsing=OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UCombatComponent* Combat;
+	
+	UPROPERTY(VisibleAnywhere)
+	class UBuffComponent* Buff;
+	
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* GrenadeMesh;
 
@@ -132,7 +137,7 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_Health, VisibleAnywhere, Category="PlayerStats")
 	float Health = 100.f;
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
 
 	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
@@ -195,9 +200,11 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
 	FORCEINLINE bool IsEliminated() const { return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth;}
 	ECombatState GetCombatState() const;
 	FORCEINLINE UAnimMontage* GetReloadMontage() const{ return ReloadMontage;}
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat;}
 	FORCEINLINE UStaticMeshComponent* GetGrenadeMesh() const { return GrenadeMesh;}
+	FORCEINLINE UBuffComponent* GetBuff() const { return Buff;}
 };

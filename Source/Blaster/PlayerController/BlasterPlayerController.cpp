@@ -126,8 +126,10 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	if(BlasterCharacter)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
-		SetHUDGrenadeAmmo(BlasterCharacter->GetCombat()->GetGrenades());
-		UE_LOG(LogTemp, Warning, TEXT("OnPossess Called!!!"));
+		if(BlasterCharacter->GetCombat())
+		{
+			SetHUDGrenadeAmmo(BlasterCharacter->GetCombat()->GetGrenades());
+		}
 	}
 }
 

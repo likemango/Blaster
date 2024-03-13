@@ -11,6 +11,7 @@ AAmmoPickup::AAmmoPickup()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	bReplicates = true;
 	SphereComponent->AddLocalOffset(FVector(0,0,85));
 
 	MeshComponent->SetRelativeScale3D(FVector(3,3,3));
