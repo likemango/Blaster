@@ -30,6 +30,13 @@ protected:
 	UStaticMeshComponent* MeshComponent;
 	UPROPERTY(EditAnywhere)
 	USoundCue* PickupSound;
+	UPROPERTY(EditAnywhere)
+	class UNiagaraComponent* PickupEffectComp;
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* PickupEffect;
+
+	UFUNCTION(NetMulticast, Reliable) // why unreliable is not work?
+	void MulticastOnHit(AActor* OtherActor);
 public:
 
 private:

@@ -3,6 +3,8 @@
 
 #include "Pickup.h"
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
@@ -24,6 +26,9 @@ APickup::APickup()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("PickupMesh");
 	MeshComponent->SetupAttachment(SphereComponent);
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	PickupEffectComp = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComp"));
+	PickupEffectComp->SetupAttachment(RootComponent);
 }
 
 void APickup::BeginPlay()
@@ -41,11 +46,40 @@ void APickup::Destroyed()
 	Super::Destroyed();
 
 	UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation());
+
+	// if(PickupEffect)
+	// {
+	// 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+	// 		this,
+	// 		PickupEffect,
+	// 		GetActorLocation(),
+	// 		GetActorRotation()
+	// 	);
+	// }
 }
 
 void APickup::OnSphereBeginOverlap(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
                                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	
+	if(OtherActor)
+	{
+		MulticastOnHit(OtherActor);
+	}
+}
+
+void APickup::MulticastOnHit_Implementation(AActor* OtherActor)
+{
+	if(PickupEffect && OtherActor)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
+			PickupEffect,
+			OtherActor->GetRootComponent(),
+			FName(),
+			OtherActor->GetActorLocation(),
+			OtherActor->GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			true
+		);
+	}
 }
 

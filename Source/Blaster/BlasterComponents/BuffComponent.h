@@ -38,21 +38,32 @@ class BLASTER_API UBuffComponent : public UActorComponent
 public:
 	UBuffComponent();
 
-	void Heal(float Amount, float Time);
+	void HealBuff(float Amount, float Time);
+	void SpeedBuff(float WalkSpeed, float CrouchSpeed, float BuffTime);
 	
 protected:
-	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	
 	void HealRampUp(float DeltaTime);
 	
 private:
+	
 	UPROPERTY()
 	class ABlasterCharacter* Character;
 
+	// Heal Buff
 	UPROPERTY()
 	TArray<FHealData> HealDataArray;
+
+	// Speed Buff
+	FTimerHandle SpeedBuffTimerHandle;
+	void OnSpeedBuffTimerEnd();
+	UPROPERTY()
+	float WalkInitialSpeed;
+	UPROPERTY()
+	float CrouchInitialSpeed;
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastChangeSpeed(float Walk, float Crouch);
 	
-public:
 
 };
