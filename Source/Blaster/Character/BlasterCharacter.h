@@ -25,6 +25,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void UpdateHealthHUD();
 	void UpdateHUDShield();
+	void UpdateHUDAmmo();
+	void SpawnDefaultWeapon();
+	
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
@@ -200,6 +203,16 @@ private:
 	// at this moment, character is undefeatable!
 	UPROPERTY(Replicated)
 	bool bInCoolDownTime;
+
+	/** 
+	* Default weapon
+	*/
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+	void DropOrDestroyWeapon(AWeapon* Weapon);
+	void DropOrDestroyWeapons();
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

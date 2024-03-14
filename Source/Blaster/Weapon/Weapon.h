@@ -15,6 +15,7 @@ enum class EWeaponState : int8
 {
 	EWS_Initial UMETA(DisplayName = "Iniitial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
+	EWS_EquippedSecondary UMETA(DisplayName = "Equipped Secondary"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
 
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
@@ -39,6 +40,7 @@ public:
 
 	// Server called
 	void SpendRound();
+	void EnableCustomDepth(bool bEnable) const;
 
 	// Textures for the weapon crosshairs
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
@@ -55,12 +57,17 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairsBottom;
+
+	UPROPERTY()
+	bool bDestroyWeapon = false;
 	
 protected:
 	virtual void BeginPlay() override;
-
-	// OverLappedComponent: component who bound this event
-	// OtherComp: the component this comp bind
+	virtual void OnWeaponStateSet();
+	virtual void OnEquipped();
+	virtual void OnDropped();
+	virtual void OnEquippedSecondary();
+	
 	UFUNCTION()
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
@@ -121,8 +128,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	EBlasterWeaponType WeaponType;
 
-	void EnableCustomDepth(bool bEnable) const;
-	
 public:
 	void SetWeaponState(EWeaponState NewState);
 	

@@ -23,8 +23,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
-	// only execute on the server
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void SwapWeapons();
 	void Reload();
 	void ShotgunReloadJumpToEnd();
 	void ThrowGrenade();
@@ -39,6 +39,10 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquipWeapon() const;
+	
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
+	
 	void Fire();
 
 	void FireButtonPressed(bool bPressed);
@@ -62,10 +66,13 @@ protected:
 	void DropEquippedWeapon();
 	void AttachActorToRightHand(AActor* ActorToAttach) const;
 	void AttachActorToLeftHand(AActor* ActorToAttach) const;
+	void AttachActorToBackpack(AActor* ActorToAttach);
 	void UpdateCarriedAmmo();
-	void PlayEquipWeaponSound() const;
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip) const;
 	void ReloadEmptyWeapon();
 	void SetGrenadeVisibility(bool bVisible) const;
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 	
 private:
 	UPROPERTY()
@@ -78,6 +85,9 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_EquipWeapon)
 	AWeapon* EquippedWeapon;
 
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
+	
 	UPROPERTY(Replicated)
 	bool bIsAiming;
 
@@ -180,4 +190,5 @@ private:
 
 public:	
 	FORCEINLINE int32 GetGrenades() const { return ThrowGrenadeAmmo; }
+	bool ShouldSwapWeapons();
 };
