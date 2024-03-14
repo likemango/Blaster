@@ -37,9 +37,9 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable) // why unreliable is not work?
 	void MulticastOnHit(AActor* OtherActor);
-public:
 
-private:
+	FTimerHandle BindOverlapTimer;
+	float BindOverlapTime = 0.25f;
+	void BindOverlapTimerFinished();
 
-	
 };

@@ -545,7 +545,7 @@ void UCombatComponent::PickupAmmo(int32 AddAmmoNum, EBlasterWeaponType AddWeapon
 {
 	if(CarriedAmmoMap.Contains(AddWeaponType))
 	{
-		CarriedAmmoMap[AddWeaponType] += AddAmmoNum;
+		CarriedAmmoMap[AddWeaponType] = FMath::Clamp(CarriedAmmoMap[AddWeaponType] + AddAmmoNum, 0, MaxCarriedAmmo);
 		UpdateCarriedAmmo();
 	}
 	if(EquippedWeapon && EquippedWeapon->GetWeaponType() == AddWeaponType && EquippedWeapon->IsEmpty())
