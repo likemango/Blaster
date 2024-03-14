@@ -24,6 +24,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void UpdateHealthHUD();
+	void UpdateHUDShield();
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
@@ -139,6 +140,18 @@ private:
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
 
+	/*
+	 * Player shield
+	 */
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, EditAnywhere, Category = "Player Stats")
+	float Shield = 0.f;
+
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
+
 	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
 
@@ -207,4 +220,7 @@ public:
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat;}
 	FORCEINLINE UStaticMeshComponent* GetGrenadeMesh() const { return GrenadeMesh;}
 	FORCEINLINE UBuffComponent* GetBuff() const { return Buff;}
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 };

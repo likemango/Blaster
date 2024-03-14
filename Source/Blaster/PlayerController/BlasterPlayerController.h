@@ -27,6 +27,7 @@ public:
 	void SetHUDGrenadeAmmo(int32 NewGrenadeAmmo);
 	void SetHUDMatchCountDown(float TimeSeconds);
 	void SetHUDAnnouncementCountdown(float TimeSeconds);
+	void SetHUDShield(float NewShield, float MaxShield);
 	float GetServerTime() const;
 	void HandleMatchHasStarted();
 	void HandleMatchCoolDown();
@@ -78,11 +79,18 @@ private:
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
 
-	bool bInitializeCharacterOverlay  = false;
 	void PollInit();
+
 	float HUDHealth;
+	bool bInitializeHealth = false;
 	float HUDMaxHealth;
-	float HUDScores;
+	float HUDScore;
+	bool bInitializeScore = false;
 	int32 HUDDefeats;
+	bool bInitializeDefeats = false;
 	int32 HUDGrenades;
+	bool bInitializeGrenades = false;
+	float HUDShield;
+	bool bInitializeShield = false;
+	float HUDMaxShield;
 };

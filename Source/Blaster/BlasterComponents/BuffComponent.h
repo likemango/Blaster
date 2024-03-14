@@ -11,10 +11,18 @@ struct FHealData
 {
 	GENERATED_BODY()
 
-	FHealData(): HealRate(0), LastHealTime(0), HealTime(0), HealAmount(0){}
+	FHealData(): bHealHealth(false), bHealShield(false), HealRate(0), LastHealTime(0), HealTime(0), HealAmount(0)
+	{
+	}
 
-	FHealData(float Amount, float Time);
+	FHealData(float Amount, float Time, bool HealHealth, bool HealShield);
 
+	UPROPERTY()
+	bool bHealHealth;
+
+	UPROPERTY()
+	bool bHealShield;
+	
 	UPROPERTY()
 	float HealRate;
 
@@ -40,11 +48,15 @@ public:
 
 	void HealBuff(float Amount, float Time);
 	void SpeedBuff(float WalkSpeed, float CrouchSpeed, float BuffTime);
-	
+	void BuffJump(float BuffJumpVelocity, float BuffTime);
+	void ReplenishShield(float ShieldAmount, float ReplenishTime);
+	void SetInitialJumpVelocity(float Velocity);
+	void SetInitialSpeeds(float BaseSpeed, float CrouchSpeed);
 protected:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	void HealRampUp(float DeltaTime);
+	void ShieldRampUp(float DeltaTime);
 	
 private:
 	
@@ -65,5 +77,20 @@ private:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastChangeSpeed(float Walk, float Crouch);
 	
+	/** 
+	* Jump buff
+	*/
+	FTimerHandle JumpBuffTimer;
+	void ResetJump();
+	float InitialJumpVelocity;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastJumpBuff(float JumpVelocity);
+
+	/** 
+	* Shield buff
+	*/
+	bool bReplenishingShield = false;
+	float ShieldReplenishRate = 0.f;
+	float ShieldReplenishAmount = 0.f;
 };

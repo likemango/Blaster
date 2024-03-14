@@ -77,6 +77,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, Shield);
 }
 
 void ABlasterCharacter::SetIsInCoolDownState(bool NewState)
@@ -89,6 +90,7 @@ void ABlasterCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UpdateHealthHUD();
+	UpdateHUDShield();
 
 	if(HasAuthority())
 	{
@@ -107,6 +109,16 @@ void ABlasterCharacter::UpdateHealthHUD()
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 	}
 }
+
+void ABlasterCharacter::UpdateHUDShield()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
 void ABlasterCharacter::Destroyed()
 {
 	Super::Destroyed();
@@ -127,8 +139,11 @@ void ABlasterCharacter::PostInitializeComponents()
 	if(Buff)
 	{
 		Buff->Character = this;
-		Buff->WalkInitialSpeed = GetCharacterMovement()->MaxWalkSpeed;
-		Buff->CrouchInitialSpeed = GetCharacterMovement()->MaxWalkSpeedCrouched;
+		if(GetCharacterMovement())
+		{
+			Buff->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
+			Buff->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
+		}
 	}
 }
 
@@ -620,8 +635,25 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	{
 		return;
 	}
-	Health = FMath::Clamp(Health-Damage, 0, MaxHealth);
+	float DamageToHealth = Damage;
+	if (Shield > 0.f)
+	{
+		if (Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			Shield = 0.f;
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
+		}
+	}
+
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
+	
 	UpdateHealthHUD();
+	UpdateHUDShield();
 	PlayHitReactMontage();
 	if(Health == 0.f)
 	{
@@ -639,6 +671,15 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHealthHUD();
 	if(Health < LastHealth)
+	{
+		PlayHitReactMontage();
+	}
+}
+
+void ABlasterCharacter::OnRep_Shield(float LastShield)
+{
+	UpdateHUDShield();
+	if (Shield < LastShield)
 	{
 		PlayHitReactMontage();
 	}

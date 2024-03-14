@@ -40,9 +40,10 @@ void UCombatComponent::BeginPlay()
 		if(Character->HasAuthority())
 		{
 			InitializeCarriedAmmo();
+			
+			ThrowGrenadeAmmo = MaxThrowGrenadeAmmo;
+			UpdateHUDThrowGrenadeAmmo();
 		}
-		ThrowGrenadeAmmo = MaxThrowGrenadeAmmo;
-		UpdateHUDThrowGrenadeAmmo();
 	}
 }
 
