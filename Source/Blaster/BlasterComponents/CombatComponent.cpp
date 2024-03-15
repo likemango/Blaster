@@ -220,6 +220,7 @@ void UCombatComponent::Fire()
 	if(CanFire())
 	{
 		ServerFire(LocallyHitTarget);
+		LocalFire(LocallyHitTarget);
 		StartFireTimer();
 		if(EquippedWeapon)
 		{
@@ -258,7 +259,8 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& HitT
 	}
 	MulticastFire(HitTarget);
 }
-void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& HitTarget)
+
+void UCombatComponent::LocalFire(const FVector_NetQuantize& HitTarget)
 {
 	if(!EquippedWeapon)
 		return;
@@ -280,6 +282,13 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& H
 		// weapon fire animation
 		EquippedWeapon->Fire(HitTarget);
 	}
+}
+
+void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& HitTarget)
+{
+	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority())
+		return;
+	LocalFire(HitTarget);
 }
 
 void UCombatComponent::SetIsAiming(bool bIsAim)
@@ -328,6 +337,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::SwapWeapons()
 {
+	if(CombatState != ECombatState::ECS_Unoccupied)
+		return;
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;
@@ -340,6 +351,7 @@ void UCombatComponent::SwapWeapons()
 
 	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	AttachActorToBackpack(SecondaryWeapon);
+	ReloadEmptyWeapon();
 }
 
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)

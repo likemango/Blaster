@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "CharacterOverlay.generated.h"
 
+class UImage;
 /**
  * 
  */
@@ -44,4 +45,13 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ShieldText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* PingText;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* HighPingImage;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* HighPingAnimation;
 };
