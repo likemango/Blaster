@@ -22,6 +22,16 @@ enum class EWeaponState : int8
 	
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -38,10 +48,26 @@ public:
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
 
-	// Server called
 	void SpendRound();
 	void EnableCustomDepth(bool bEnable) const;
 
+	UPROPERTY(EditAnywhere)
+	EFireType FireType;
+
+	/**
+	* Trace end with scatter
+	*/
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter = true;
+	
+	FVector TraceEndWithScatter(const FVector& HitTarget);
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 75.f;
+	
 	// Textures for the weapon crosshairs
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	class UTexture2D* CrosshairsCenter;

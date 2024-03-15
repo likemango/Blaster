@@ -1,6 +1,6 @@
 #pragma once
 
-#define TRACE_LINE_LENGTH 80000.0f;
+#define TRACE_LINE_LENGTH 80000.0f
 
 #define CUSTOM_DEPTH_PURPLE 250
 #define CUSTOM_DEPTH_BLUE 251

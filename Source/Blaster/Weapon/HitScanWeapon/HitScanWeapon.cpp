@@ -82,29 +82,12 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	}
 }
 
-FVector AHitScanWeapon::TraceEndWithScatter(const FVector& FireStart, const FVector& HitTarget)
-{
-	FVector HitDirection = (HitTarget - FireStart).GetSafeNormal();
-	FVector ScatterSphereLocation = FireStart + HitDirection * DistanceScatterSphere;
-
-	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, ScatterSphereRadius);
-	FVector RandLoc = ScatterSphereLocation + RandVec;
-	FVector RandDir = (RandLoc - FireStart).GetSafeNormal();
-
-	FVector ScatterLoc = FireStart + RandDir * TRACE_LINE_LENGTH;
-	
-	/*DrawDebugSphere(GetWorld(), ScatterSphereLocation, ScatterSphereRadius, 16, FColor::Red, true);
-	DrawDebugSphere(GetWorld(), ScatterSphereLocation, 4, 12, FColor::Orange, true);
-	DrawDebugLine(GetWorld(), FireStart, ScatterLoc, FColor::Cyan, true);*/
-	return ScatterLoc;
-}
-
 void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit)
 {
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+		FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f;
 
 		World->LineTraceSingleByChannel(
 			OutHit,
@@ -117,6 +100,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		{
 			BeamEnd = OutHit.ImpactPoint;
 		}
+		DrawDebugSphere(GetWorld(), BeamEnd, 16.f, 12, FColor::Orange, true);
 		if (BeamParticle)
 		{
 			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(

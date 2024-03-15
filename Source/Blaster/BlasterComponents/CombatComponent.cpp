@@ -6,6 +6,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/Weapon/HitScanWeapon/Shotgun.h"
 #include "Blaster/Weapon/ProjectileWeapon/Projectile/Projectile.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
@@ -219,15 +220,68 @@ void UCombatComponent::Fire()
 {
 	if(CanFire())
 	{
-		ServerFire(LocallyHitTarget);
-		LocalFire(LocallyHitTarget);
 		StartFireTimer();
 		if(EquippedWeapon)
 		{
 			CrosshairShootingFactory = 0.75f;
+
+			switch (EquippedWeapon->FireType)
+			{
+				case EFireType::EFT_Projectile:
+					FireProjectileWeapon();
+					break;
+				case EFireType::EFT_HitScan:
+					FireHitScanWeapon();
+					break;
+				case EFireType::EFT_Shotgun:
+					FireShotgun();
+					break;
+			}
 		}
 	}
 }
+
+void UCombatComponent::FireProjectileWeapon()
+{
+	if (EquippedWeapon && Character)
+	{
+		LocallyHitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(LocallyHitTarget) : LocallyHitTarget;
+		if(!Character->HasAuthority())
+		{
+			LocalFire(LocallyHitTarget);
+		}
+		ServerFire(LocallyHitTarget);
+	}
+}
+
+void UCombatComponent::FireHitScanWeapon()
+{
+	if (EquippedWeapon && Character)
+	{
+		LocallyHitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(LocallyHitTarget) : LocallyHitTarget;
+		if(!Character->HasAuthority())
+		{
+			LocalFire(LocallyHitTarget);
+		}
+		ServerFire(LocallyHitTarget);
+	}
+}
+
+void UCombatComponent::FireShotgun()
+{
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Shotgun && Character)
+	{
+		TArray<FVector_NetQuantize> HitTargets;
+		Shotgun->ShotgunTraceEndWithScatter(LocallyHitTarget, HitTargets);
+		if (!Character->HasAuthority())
+		{
+			ShotgunLocalFire(HitTargets);
+		}
+		ServerShotgunFire(HitTargets);
+	}
+}
+
 void UCombatComponent::StartFireTimer()
 {
 	if(!Character || !EquippedWeapon) return;
@@ -260,27 +314,44 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& HitT
 	MulticastFire(HitTarget);
 }
 
+void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	if(EquippedWeapon)
+	{
+		// server called this!
+		EquippedWeapon->SpendRound();
+	}
+	MulticastShotgunFire(TraceHitTargets);
+}
+
+void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority())
+		return;
+	ShotgunLocalFire(TraceHitTargets);
+}
+
 void UCombatComponent::LocalFire(const FVector_NetQuantize& HitTarget)
 {
 	if(!EquippedWeapon)
 		return;
-	if(Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_Shotgun)
-	{
-		// character montage
-		Character->PlayFireMontage(bIsAiming);
-		// weapon fire animation
-		EquippedWeapon->Fire(HitTarget);
-		CombatState = ECombatState::ECS_Unoccupied;
-		bCanFire = false;
-		return;
-	}
 	bCanFire = false;
 	if(Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
-		// character montage
 		Character->PlayFireMontage(bIsAiming);
-		// weapon fire animation
 		EquippedWeapon->Fire(HitTarget);
+	}
+}
+
+void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Shotgun == nullptr || Character == nullptr) return;
+	if (CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
+	{
+		Character->PlayFireMontage(bIsAiming);
+		Shotgun->FireShotgun(TraceHitTargets);
+		CombatState = ECombatState::ECS_Unoccupied;
 	}
 }
 
