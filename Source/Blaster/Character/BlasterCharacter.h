@@ -77,7 +77,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UWidgetComponent* WidgetComponent;
 	
-	UPROPERTY(ReplicatedUsing=OnRep_OverlappingWeapon)
+	UPROPERTY(Replicated)
 	class AWeapon* OverlappingWeapon;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
@@ -88,9 +88,6 @@ private:
 	
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* GrenadeMesh;
-
-	UFUNCTION()
-	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
 	// RPC(remote process call, client call server to execute)
 	// reliable: if failed, it will send again to make sure it received. Use it sparing.

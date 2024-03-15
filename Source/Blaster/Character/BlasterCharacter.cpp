@@ -756,31 +756,20 @@ void ABlasterCharacter::DropOrDestroyWeapons()
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
-	if(OverlappingWeapon)
-	{
-		OverlappingWeapon->ShowPickupWidget(false);
-	}
-	OverlappingWeapon = Weapon;
 	if(IsLocallyControlled())
 	{
-		// if it is control on the server
 		if(OverlappingWeapon)
 		{
-			OverlappingWeapon->ShowPickupWidget(true);
+			OverlappingWeapon->ShowPickupWidget(false);
 		}
-	}	
-}
-void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
-{
-	if(LastWeapon)
-	{
-		LastWeapon->ShowPickupWidget(false);
+		if(Weapon)
+		{
+			Weapon->ShowPickupWidget(true);
+		}
 	}
-	if(OverlappingWeapon)
-	{
-		OverlappingWeapon->ShowPickupWidget(true);
-	}
+	OverlappingWeapon = Weapon;
 }
+
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
