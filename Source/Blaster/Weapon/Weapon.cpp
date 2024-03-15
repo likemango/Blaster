@@ -57,6 +57,12 @@ void AWeapon::BeginPlay()
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
 		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnSphereOverlapEnd);
 	}
+	else
+	{
+		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::LocalOnSphereOverlap);
+		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::LocalOnSphereOverlapEnd);
+	}
+	
 	if(PickupWidget)
 	{
 		PickupWidget->SetVisibility(false);
@@ -91,6 +97,26 @@ void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverLappedComponent, AActo
 {
 	ABlasterCharacter* OverlapBlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
 	if(OverlapBlasterCharacter)
+	{
+		OverlapBlasterCharacter->SetOverlappingWeapon(nullptr);
+	}
+}
+
+void AWeapon::LocalOnSphereOverlap(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	ABlasterCharacter* OverlapBlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(OverlapBlasterCharacter && OverlapBlasterCharacter->IsLocallyControlled())
+	{
+		OverlapBlasterCharacter->SetOverlappingWeapon(this);
+	}
+}
+
+void AWeapon::LocalOnSphereOverlapEnd(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	ABlasterCharacter* OverlapBlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(OverlapBlasterCharacter && OverlapBlasterCharacter->IsLocallyControlled())
 	{
 		OverlapBlasterCharacter->SetOverlappingWeapon(nullptr);
 	}

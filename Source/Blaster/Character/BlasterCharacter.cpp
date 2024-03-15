@@ -75,9 +75,10 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	// 只会将OverlappingWeapon发送给拥有该角色的客户端
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
-	DOREPLIFETIME(ABlasterCharacter, Health);
-	DOREPLIFETIME(ABlasterCharacter, Shield);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, Health, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, Shield, COND_OwnerOnly);
 }
 
 void ABlasterCharacter::SetIsInCoolDownState(bool NewState)
@@ -665,7 +666,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 		}
 	}
 
-	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
+	SetHealth(FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth));
 	
 	UpdateHealthHUD();
 	UpdateHUDShield();
@@ -756,19 +757,35 @@ void ABlasterCharacter::DropOrDestroyWeapons()
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
-	if(OverlappingWeapon)
+	// for authorized client
+	if(!HasAuthority())
 	{
-		OverlappingWeapon->ShowPickupWidget(false);
-	}
-	OverlappingWeapon = Weapon;
-	if(IsLocallyControlled())
-	{
-		// if it is control on the server
 		if(OverlappingWeapon)
 		{
-			OverlappingWeapon->ShowPickupWidget(true);
+			OverlappingWeapon->ShowPickupWidget(false);
 		}
-	}	
+		if(Weapon)
+		{
+			Weapon->ShowPickupWidget(true);
+		}
+	}
+	// for server
+	if(HasAuthority())
+	{
+		// only for server local-player
+		if(IsLocallyControlled())
+		{
+			if(OverlappingWeapon)
+			{
+				OverlappingWeapon->ShowPickupWidget(false);
+			}
+			if(Weapon)
+			{
+				Weapon->ShowPickupWidget(true);
+			}
+		}
+		OverlappingWeapon = Weapon;
+	}
 }
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
