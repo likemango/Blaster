@@ -286,6 +286,7 @@ void UCombatComponent::LocalFire(const FVector_NetQuantize& HitTarget)
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& HitTarget)
 {
+	// Authorized client gonna do fire in their local.
 	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority())
 		return;
 	LocalFire(HitTarget);
