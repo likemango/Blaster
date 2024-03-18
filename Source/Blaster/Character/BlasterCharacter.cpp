@@ -611,7 +611,8 @@ void ABlasterCharacter::PlayHitReactMontage() const
 	if(!Combat || !Combat->EquippedWeapon) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if(AnimInstance && HitReactMontage)
+	// sample stop play hit when reloading,because it will block it. Need more fix
+	if(AnimInstance && HitReactMontage && !AnimInstance->Montage_IsPlaying(ReloadMontage))
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
 		FName SectionName("FromFront");
