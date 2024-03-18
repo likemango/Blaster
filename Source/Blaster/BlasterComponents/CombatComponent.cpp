@@ -150,7 +150,7 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 	Character->GetCamera()->SetFieldOfView(CurrentFOV);
 }
 
-bool UCombatComponent::CanFire() const
+bool UCombatComponent::CanFire()
 {
 	if(!EquippedWeapon)
 	{
@@ -158,11 +158,13 @@ bool UCombatComponent::CanFire() const
 	}
 	if (bLocallyReloading)
 	{
+		// allow shutgun shot at reloading
+		if(!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_Shotgun)
+		{
+			bLocallyReloading = false;
+			return true;
+		}
 		return false;
-	}
-	if(!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_Shotgun)
-	{
-		return true;
 	}
 	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
 }

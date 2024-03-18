@@ -136,7 +136,7 @@ private:
 	float ZoomOffInterpSpeed = 20.f;
 	void InterpFOV(float DeltaTime);
 
-	bool CanFire() const;
+	bool CanFire();
 
 	//当前持有的武器的弹药
 	UPROPERTY(ReplicatedUsing=OnRep_CarriedAmmo)
