@@ -756,18 +756,18 @@ void ABlasterCharacter::DropOrDestroyWeapons()
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
+	if(OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(false);
+	}
+	OverlappingWeapon = Weapon;
 	if(IsLocallyControlled())
 	{
-		if(OverlappingWeapon)
-		{
-			OverlappingWeapon->ShowPickupWidget(false);
-		}
 		if(Weapon)
 		{
 			Weapon->ShowPickupWidget(true);
 		}
 	}
-	OverlappingWeapon = Weapon;
 }
 
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
@@ -811,6 +811,12 @@ ECombatState ABlasterCharacter::GetCombatState() const
 		return Combat->CombatState;
 	}
 	return ECombatState::ECS_MAX;
+}
+
+bool ABlasterCharacter::IsLocallyReloading()
+{
+	if (Combat == nullptr) return false;
+	return Combat->bLocallyReloading;
 }
 
 bool ABlasterCharacter::IsEquippedWeapon()

@@ -72,7 +72,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor,
@@ -94,15 +93,50 @@ void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverLappedComponent, AActo
 		OverlapBlasterCharacter->SetOverlappingWeapon(nullptr);
 	}
 }
-
+// 实现Server reconciliation
 void AWeapon::SpendRound()
 {
 	Ammo = FMath::Clamp(Ammo-1, 0, MagCapacity);
 	SetHUDAmmo();
+	if(HasAuthority())
+	{
+		//服务器端的校验程序在这里执行
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		++Sequence;
+	}
 }
 
-void AWeapon::OnRep_WeaponAmmo()
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
 {
+	if(HasAuthority())
+	{
+		return;
+	}
+	Ammo = ServerAmmo;
+	--Sequence;
+	Ammo -= Sequence;
+	SetHUDAmmo();
+}
+
+//它只在服务器执行，所以这里并没有服务器和解，只是手动实现replicate
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+	ClientAddAmmo(Ammo);
+}
+
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if(HasAuthority())
+	{
+		return;
+	}
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	
 	BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterCharacter;
 	bool bJumpToShotgunEnd = BlasterCharacter &&
 		BlasterCharacter->GetCombat() &&
@@ -220,6 +254,7 @@ void AWeapon::OnRep_WeaponState()
 	OnWeaponStateSet();
 }
 
+
 void AWeapon::ShowPickupWidget(bool bShow)
 {
 	if(PickupWidget)
@@ -251,7 +286,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
-	// SpendRound();
+	SpendRound();
 }
 
 void AWeapon::Dropped()
@@ -265,12 +300,6 @@ void AWeapon::Dropped()
 	SetOwner(nullptr);
 	BlasterCharacter = nullptr;
 	BlasterPlayerController = nullptr;
-}
-
-void AWeapon::AddAmmo(int32 AmmoToAdd)
-{
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
-	SetHUDAmmo();
 }
 
 void AWeapon::OnRep_Owner()

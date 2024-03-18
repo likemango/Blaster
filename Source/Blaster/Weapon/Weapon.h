@@ -138,12 +138,21 @@ private:
 	/*
 	 * Weapon Ammo Amount
 	 */
-	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_WeaponAmmo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
+
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+
+	// The number of unprocessed server requests for Ammo.
+	// Incremented in SpendRound, decremented in ClientUpdateAmmo.
+	int32 Sequence = 0;
+	
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
-	UFUNCTION()
-	void OnRep_WeaponAmmo();
 
 	UPROPERTY()
 	class ABlasterCharacter* BlasterCharacter;

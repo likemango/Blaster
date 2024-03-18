@@ -153,7 +153,13 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 bool UCombatComponent::CanFire() const
 {
 	if(!EquippedWeapon)
+	{
 		return false;
+	}
+	if (bLocallyReloading)
+	{
+		return false;
+	}
 	if(!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_Shotgun)
 	{
 		return true;
@@ -306,21 +312,11 @@ void UCombatComponent::OnFireTimerFinished()
 }
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& HitTarget)
 {
-	if(EquippedWeapon)
-	{
-		// server called this!
-		EquippedWeapon->SpendRound();
-	}
 	MulticastFire(HitTarget);
 }
 
 void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
 {
-	if(EquippedWeapon)
-	{
-		// server called this!
-		EquippedWeapon->SpendRound();
-	}
 	MulticastShotgunFire(TraceHitTargets);
 }
 
@@ -369,17 +365,22 @@ void UCombatComponent::SetIsAiming(bool bIsAim)
 		return;
 	// authorized client do aiming intermediately
 	bIsAiming = bIsAim;
+	if (Character->IsLocallyControlled())
+	{
+		bAimButtonPressed = bIsAiming;
+	}
 	if(Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
-	// then tell server to do the result, and tell other simulated client
+	// then tell server,当存在较大延迟时，出现Client-Server misMatch
 	Server_SetIsAiming(bIsAim);
 
 	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EBlasterWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
 	}
+	
 }
 void UCombatComponent::Server_SetIsAiming_Implementation(bool bIsAim)
 {
@@ -451,6 +452,14 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 
 	if (EquippedWeapon == nullptr) return;
 	EquippedWeapon->SetOwner(Character);
+}
+
+void UCombatComponent::OnRep_Aiming()
+{
+	if (Character && Character->IsLocallyControlled())
+	{
+		bIsAiming = bAimButtonPressed;
+	}
 }
 
 void UCombatComponent::DropEquippedWeapon()
@@ -541,9 +550,11 @@ void UCombatComponent::SetGrenadeVisibility(bool bVisible) const
 
 void UCombatComponent::Reload()
 {
-	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull())
+	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull() && !bLocallyReloading)
 	{
 		ServerReload();
+		HandleReload();
+		bLocallyReloading = true;
 	}
 }
 
@@ -552,12 +563,18 @@ void UCombatComponent::ServerReload_Implementation()
 	if(!Character || !EquippedWeapon) return;
 	
 	CombatState = ECombatState::ECS_Reloading;
-	HandleReload();
+	if(!Character->IsLocallyControlled())
+	{
+		HandleReload();
+	}
 }
 
 void UCombatComponent::HandleReload() const
 {
-	Character->PlayReloadMontage();
+	if(Character)
+	{
+		Character->PlayReloadMontage();
+	}
 }
 
 int32 UCombatComponent::AmountToReload()
@@ -726,6 +743,7 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 
 void UCombatComponent::ReloadFinished()
 {
+	bLocallyReloading = false;
 	if(Character && Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -794,7 +812,10 @@ void UCombatComponent::OnRep_CombatState()
 	switch (CombatState)
 	{
 	case ECombatState::ECS_Reloading:
-		HandleReload();
+		if(Character && !Character->IsLocallyControlled())
+		{
+			HandleReload();
+		}
 		break;
 	case ECombatState::ECS_Unoccupied:
 		if(bFireButtonPressed)

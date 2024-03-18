@@ -98,9 +98,14 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
 	
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
 	bool bIsAiming;
-
+	
+	UFUNCTION()
+	void OnRep_Aiming();
+	
+	bool bAimButtonPressed = false;
+	
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed;
 	UPROPERTY(EditAnywhere)
@@ -175,6 +180,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	bool bLocallyReloading = false;
 
 	void HandleReload() const;
 
