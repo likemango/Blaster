@@ -69,7 +69,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				{
 					UGameplayStatics::ApplyDamage(
 						HitPair.Key, // Character that was hit
-						DamageValue * HitPair.Value, // Multiply Damage by number of times hit
+						Damage * HitPair.Value, // Multiply Damage by number of times hit
 						InstigatorController,
 						this,
 						UDamageType::StaticClass()

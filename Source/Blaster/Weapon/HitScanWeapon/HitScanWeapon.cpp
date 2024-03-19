@@ -9,7 +9,8 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "DrawDebugHelpers.h"
-#include "Kismet/KismetMathLibrary.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -22,11 +23,26 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	if(MuzzleFlashSocket)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-
 		FVector Start = SocketTransform.GetLocation();
 		FHitResult FireHit;
 		WeaponTraceHit(Start, HitTarget, FireHit);
 		UWorld* World = GetWorld();
+		if (MuzzleFlash)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				World,
+				MuzzleFlash,
+				SocketTransform
+			);
+		}
+		if (FireSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				FireSound,
+				GetActorLocation()
+			);
+		}
 		if(World && FireHit.bBlockingHit)
 		{
 			if (HitSound)
@@ -46,38 +62,42 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					FireHit.ImpactNormal.Rotation()
 				);
 			}
-			
+
+			if(!FireHit.GetActor())
+				return;
+			AController* FireInstigator = OwnerPawn->GetController();
+			ABlasterCharacter* DamageCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
 			// only cause damage on server
-			if(HasAuthority() && FireHit.GetActor())
+			if(FireInstigator && DamageCharacter)
 			{
-				AController* FireInstigator = OwnerPawn->GetController();
-				ABlasterCharacter* DamageCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-				if(DamageCharacter && FireInstigator)
+				if(HasAuthority() && !bUseServerSideRewind)
 				{
-					UGameplayStatics::ApplyDamage(
-				DamageCharacter,
-					DamageValue,
-					FireInstigator,
-					this,
-					UDamageType::StaticClass());
+					if(DamageCharacter && FireInstigator)
+					{
+						UGameplayStatics::ApplyDamage(
+					DamageCharacter,
+						Damage,
+						FireInstigator,
+						this,
+						UDamageType::StaticClass());
+					}
+				}
+				else if(!HasAuthority() && bUseServerSideRewind)
+				{
+					BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterCharacter;
+					BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(FireInstigator) : BlasterPlayerController;
+					if (BlasterPlayerController && BlasterCharacter && BlasterCharacter->GetLagCompensation())
+					{
+						BlasterCharacter->GetLagCompensation()->ServerScoreRequest(
+							BlasterCharacter,
+							Start,
+							HitTarget,
+							BlasterPlayerController->GetServerTime() - BlasterPlayerController->SingleTripTime,
+							this
+						);
+					}
 				}
 			}
-		}
-		if (MuzzleFlash)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(
-				World,
-				MuzzleFlash,
-				SocketTransform
-			);
-		}
-		if (FireSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				FireSound,
-				GetActorLocation()
-			);
 		}
 	}
 }

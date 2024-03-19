@@ -32,6 +32,8 @@ public:
 	void HandleMatchHasStarted();
 	void HandleMatchCoolDown();
 	void OnMatchStateSet(FName NewState);
+	
+	float SingleTripTime = 0.f;
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();

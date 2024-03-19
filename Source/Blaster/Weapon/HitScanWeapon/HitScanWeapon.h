@@ -21,9 +21,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound;
-
-	UPROPERTY(EditAnywhere)
-	float DamageValue;
 	
 private:
 

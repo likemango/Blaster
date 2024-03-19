@@ -99,6 +99,18 @@ protected:
 	UFUNCTION()
 	virtual void OnSphereOverlapEnd(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewind = false;
+
+	UPROPERTY()
+	class ABlasterCharacter* BlasterCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterPlayerController;
+	
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -154,12 +166,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 
-	UPROPERTY()
-	class ABlasterCharacter* BlasterCharacter;
-
-	UPROPERTY()
-	class ABlasterPlayerController* BlasterPlayerController;
-
 	UPROPERTY(EditAnywhere)
 	EBlasterWeaponType WeaponType;
 
@@ -178,4 +184,6 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo;}
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity;}
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound;}
+	FORCEINLINE float GetDamage() { return Damage;}
+
 };
