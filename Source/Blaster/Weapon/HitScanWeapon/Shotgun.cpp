@@ -3,7 +3,9 @@
 
 #include "Shotgun.h"
 
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Sound/SoundCue.h"
 #include "Kismet/GameplayStatics.h"
@@ -24,57 +26,71 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 
 		// Maps hit character to number of times hit
 		TMap<ABlasterCharacter*, uint32> HitMap;
-		for (FVector_NetQuantize HitTarget : HitTargets)
+  		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
 			FHitResult FireHit;
 			WeaponTraceHit(Start, HitTarget, FireHit);
-
-			ABlasterCharacter* VictimCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-			if (VictimCharacter)
+			if (ImpactParticle)
 			{
-				if (!HitMap.Contains(VictimCharacter))
-				{
-					HitMap.Emplace(VictimCharacter, 1);
-				}
-				else
-				{
-					HitMap[VictimCharacter]++;
-				}
-				if (ImpactParticle)
-				{
-					UGameplayStatics::SpawnEmitterAtLocation(
-						GetWorld(),
-						ImpactParticle,
-						FireHit.ImpactPoint,
-						FireHit.ImpactNormal.Rotation()
-					);
-				}
-				if (HitSound)
-				{
-					UGameplayStatics::PlaySoundAtLocation(
-						this,
-						HitSound,
-						FireHit.ImpactPoint,
-						.5f,
-						FMath::FRandRange(-.5f, .5f)
-					);
-				}
+				UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(),
+					ImpactParticle,
+					FireHit.ImpactPoint,
+					FireHit.ImpactNormal.Rotation()
+				);
 			}
-		}
-		if(HasAuthority())
-		{
-			for (auto HitPair : HitMap)
+			if (HitSound)
 			{
-				if (HitPair.Key && InstigatorController)
+				UGameplayStatics::PlaySoundAtLocation(
+					this,
+					HitSound,
+					FireHit.ImpactPoint,
+					.5f,
+					FMath::FRandRange(-.5f, .5f)
+				);
+			}
+  			//当客户端检测到击中目标，才是考虑计算伤害或者是Server-side rewind
+			if(FireHit.GetActor() == nullptr)
+				continue;
+			ABlasterCharacter* VictimCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
+  			if(VictimCharacter)
+  			{
+  				if (!HitMap.Contains(VictimCharacter))
+  				{
+  					HitMap.Emplace(VictimCharacter, 1);
+  				}
+  				else
+  				{
+  					HitMap[VictimCharacter]++;
+  				}
+  			}
+		}
+		TArray<ABlasterCharacter*> HitCharacters;
+		for (auto HitPair : HitMap)
+		{
+			if (HitPair.Key && InstigatorController)
+			{
+				if(HasAuthority() && !bUseServerSideRewind)
 				{
 					UGameplayStatics::ApplyDamage(
-						HitPair.Key, // Character that was hit
-						Damage * HitPair.Value, // Multiply Damage by number of times hit
-						InstigatorController,
-						this,
-						UDamageType::StaticClass()
-					);
+					HitPair.Key, // Character that was hit
+					Damage * HitPair.Value, // Multiply Damage by number of times hit
+					InstigatorController,
+					this,
+					UDamageType::StaticClass());
 				}
+				HitCharacters.Emplace(HitPair.Key);
+			}
+		}
+		
+		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterPlayerController;
+		BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterCharacter;
+		if(BlasterCharacter && BlasterCharacter->IsLocallyControlled())
+		{
+			if(!HasAuthority() && bUseServerSideRewind)
+			{
+				float FireTime = BlasterPlayerController->GetServerTime() - BlasterPlayerController->SingleTripTime;
+				BlasterCharacter->GetLagCompensation()->ShotgunServerScoreRequest(HitCharacters, Start, HitTargets, FireTime);
 			}
 		}
 	}

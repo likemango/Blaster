@@ -17,8 +17,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	Super::Fire(HitTarget);
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	if(OwnerPawn == nullptr)
-		return;
+	if(OwnerPawn == nullptr)return;
+	
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
 	if(MuzzleFlashSocket)
 	{
@@ -62,12 +62,11 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					FireHit.ImpactNormal.Rotation()
 				);
 			}
-
+			//当客户端检测到击中目标，才是考虑计算伤害或者是Server-side rewind
 			if(!FireHit.GetActor())
 				return;
 			AController* FireInstigator = OwnerPawn->GetController();
 			ABlasterCharacter* DamageCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-			// only cause damage on server
 			if(FireInstigator && DamageCharacter)
 			{
 				if(HasAuthority() && !bUseServerSideRewind)
@@ -86,10 +85,10 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				{
 					BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterCharacter;
 					BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(FireInstigator) : BlasterPlayerController;
-					if (BlasterPlayerController && BlasterCharacter && BlasterCharacter->GetLagCompensation())
+					if (BlasterCharacter && BlasterCharacter->IsLocallyControlled() && BlasterPlayerController && BlasterCharacter->GetLagCompensation())
 					{
 						BlasterCharacter->GetLagCompensation()->ServerScoreRequest(
-							BlasterCharacter,
+							DamageCharacter,
 							Start,
 							HitTarget,
 							BlasterPlayerController->GetServerTime() - BlasterPlayerController->SingleTripTime,

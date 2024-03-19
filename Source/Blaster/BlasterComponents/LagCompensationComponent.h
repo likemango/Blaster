@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "LagCompensationComponent.generated.h"
 
+class ABlasterCharacter;
+
 USTRUCT(BlueprintType)
 struct FBoxInformation
 {
@@ -31,6 +33,9 @@ struct FFramePackage
 
 	UPROPERTY()
 	TMap<FName, FBoxInformation> HitBoxInfo;
+
+	UPROPERTY()
+	ABlasterCharacter* Character;
 };
 
 USTRUCT(BlueprintType)
@@ -43,6 +48,19 @@ struct FServerSideRewindResult
 
 	UPROPERTY()
 	bool bHeadShot;
+};
+
+USTRUCT(BlueprintType)
+struct FShotgunServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TMap<ABlasterCharacter*, uint32> HeadShots;
+
+	UPROPERTY()
+	TMap<ABlasterCharacter*, uint32> BodyShots;
+
 };
 
 
@@ -58,23 +76,46 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(ABlasterCharacter* HitCharacter,const FVector_NetQuantize& TraceStart,const FVector_NetQuantize& HitLocation,
 		float HitTime,class AWeapon* DamageCauser);
-	
-protected:
-	virtual void BeginPlay() override;
+
+	UFUNCTION(Server, Reliable)
+	void ShotgunServerScoreRequest(
+		const TArray<ABlasterCharacter*>& HitCharacters,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocations,
+		float HitTime
+	);
 	
 private:
-	UPROPERTY()
-	ABlasterCharacter* Character;
+	
+	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime) const;
+
+	/** 
+	* Shotgun
+	*/
+	FShotgunServerSideRewindResult ShotgunServerSideRewind(
+		const TArray<ABlasterCharacter*>& HitCharacters, 
+		const FVector_NetQuantize& TraceStart, 
+		const TArray<FVector_NetQuantize>& HitLocations, 
+		float HitTime);
+
+	FShotgunServerSideRewindResult ShotgunConfirmHit(
+		const TArray<FFramePackage>& FramePackages,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocations
+	);
 
 	UPROPERTY()
-	class ABlasterPlayerController* Controller;
+	ABlasterCharacter* Character = nullptr;
+
+	UPROPERTY()
+	class ABlasterPlayerController* Controller = nullptr;
 	
 	TDoubleLinkedList<FFramePackage> FrameHistory;
 
 	UPROPERTY(EditAnywhere)
 	float MaxRecordTime = 4.f;
 
-	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
+	void ShowFramePackage(const FFramePackage& Package, const FColor& Color) const;
 	void SaveFramePackage(FFramePackage& Package);
 	FServerSideRewindResult ServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation, float HitTime);
@@ -82,7 +123,7 @@ private:
 	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter,
 		const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
 	
-	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime) const;
 	void CacheBoxPositions(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
 	void ResetHitBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
