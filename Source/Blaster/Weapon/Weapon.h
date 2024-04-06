@@ -184,6 +184,6 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo;}
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity;}
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound;}
-	FORCEINLINE float GetDamage() { return Damage;}
+	FORCEINLINE float GetDamage() const { return Damage;}
 
 };

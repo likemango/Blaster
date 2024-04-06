@@ -12,6 +12,11 @@ class BLASTER_API AProjectileRocket : public AProjectile
 	GENERATED_BODY()
 
 public:
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+	
 	AProjectileRocket();
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;

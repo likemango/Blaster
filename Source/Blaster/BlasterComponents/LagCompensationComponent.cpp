@@ -150,7 +150,7 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 	CacheBoxPositions(HitCharacter, CurrentFrame);
 	//将HitBoxes移动到指定的位置
 	MoveBoxes(HitCharacter, Package);
-	//启动这些Boxes的碰撞检测
+	//关闭Mesh上的碰撞
 	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::NoCollision);
 
 	// Enable collision for the head first
@@ -352,20 +352,21 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(ABlasterCharacter* HitC
 	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Younger = History.GetHead();
 	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Older = Younger;
 	while (Older->GetValue().Time > HitTime) // is Older still younger than HitTime?
-		{
+	{
 		// March back until: OlderTime < HitTime < YoungerTime
-		if (Older->GetNextNode() == nullptr) break;
+		if (Older->GetNextNode() == nullptr)
+			break;
 		Older = Older->GetNextNode();
 		if (Older->GetValue().Time > HitTime)
 		{
 			Younger = Older;
 		}
-		}
+	}
 	if (Older->GetValue().Time == HitTime) // highly unlikely, but we found our frame to check
-		{
+	{
 		FrameToCheck = Older->GetValue();
 		bShouldInterpolate = false;
-		}
+	}
 	if (bShouldInterpolate)
 	{
 		// Interpolate between Younger and Older

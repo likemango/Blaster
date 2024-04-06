@@ -14,6 +14,16 @@ class BLASTER_API AProjectile : public AActor
 public:
 	AProjectile();
 
+	/*
+	 *	Used with server-side rewind
+	 */
+	bool bUseServerSideRewind = false;
+	FVector_NetQuantize TraceStart;
+	FVector_NetQuantize100 InitialVelocity;
+
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 15000.f;
+
 protected:
 	virtual void BeginPlay() override;
 	//for replicated actor, destroyed function gonna be called in all clients!

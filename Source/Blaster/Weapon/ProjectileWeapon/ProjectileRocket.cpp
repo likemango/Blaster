@@ -11,6 +11,22 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 
+#if WITH_EDITOR
+void AProjectileRocket::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	FName ChangedPropertyName = PropertyChangedEvent.Property->GetFName();
+	if(GET_MEMBER_NAME_CHECKED(AProjectileRocket, InitialSpeed) == ChangedPropertyName)
+	{
+		if(RocketProjectileMovementComponent)
+		{
+			RocketProjectileMovementComponent->InitialSpeed = InitialSpeed;
+			RocketProjectileMovementComponent->MaxSpeed = InitialSpeed;
+		}
+	}
+}
+#endif
 
 AProjectileRocket::AProjectileRocket()
 {
