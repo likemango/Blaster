@@ -478,7 +478,7 @@ void ABlasterPlayerController::ShowPing()
 		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		if(PlayerState)
 		{
-			uint8 PingValue = PlayerState->GetPingInMilliseconds();
+			int32 PingValue = PlayerState->GetCompressedPing() * 4;
 			BlasterHUD->CharacterOverlay->PingText->SetText(FText::FromString(FString::FromInt(PingValue)));
 		}
 	}
@@ -519,20 +519,28 @@ void ABlasterPlayerController::StopHighPingWarning()
 
 void ABlasterPlayerController::CheckPing(float DeltaTime)
 {
+	if(HasAuthority())
+		return;
+	
 	ShowPing();
-	HighPingRunningTime += DeltaTime;
-	if (HighPingRunningTime > CheckPingFrequency)
+	PingRunningTime += DeltaTime;
+	if (PingRunningTime > CheckPingFrequency)
 	{
 		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		if (PlayerState)
 		{
-			if (PlayerState->GetPingInMilliseconds() > HighPingThreshold)
+			if (PlayerState->GetCompressedPing() * 4 > HighPingThreshold)
 			{
 				HighPingWarning();
 				PingAnimationRunningTime = 0.f;
+				ServerReportPingStatus(true);
+			}
+			else
+			{
+				ServerReportPingStatus(false);
 			}
 		}
-		HighPingRunningTime = 0.f;
+		PingRunningTime = 0.f;
 	}
 	bool bHighPingAnimationPlaying =
 		BlasterHUD && BlasterHUD->CharacterOverlay &&
@@ -546,4 +554,9 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 			StopHighPingWarning();
 		}
 	}
+}
+
+void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	HighPingDelegate.Broadcast(bHighPing);
 }
