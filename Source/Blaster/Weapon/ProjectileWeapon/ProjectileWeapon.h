@@ -18,6 +18,11 @@ protected:
 	virtual void Fire(const FVector& HitTarget) override;
 
 private:
+	// replicated version
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AProjectile> ProjectileClass;
+
+	// non-replicated version
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AProjectile> ServerSideRewindProjectileClass;
 };

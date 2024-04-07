@@ -84,11 +84,22 @@ public:
 		const TArray<FVector_NetQuantize>& HitLocations,
 		float HitTime
 	);
+
+	UFUNCTION(Server, Reliable)
+	void ProjectileServerScoreRequest(ABlasterCharacter* HitCharacter,const FVector_NetQuantize& TraceStart,const FVector_NetQuantize100& InitialVelocity,
+		float HitTime);
 	
 private:
 	
-	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime) const;
-
+	/*
+	 * HitScan
+	 */
+	FServerSideRewindResult ServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize& HitLocation, float HitTime);
+	
+	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
+	
 	/** 
 	* Shotgun
 	*/
@@ -104,6 +115,15 @@ private:
 		const TArray<FVector_NetQuantize>& HitLocations
 	);
 
+	/*
+	 * Projectile
+	 */
+	FServerSideRewindResult ProjectileServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
+	const FVector_NetQuantize100& InitialVelocity, float HitTime);
+	
+	FServerSideRewindResult ProjectileConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity);
+
 	UPROPERTY()
 	ABlasterCharacter* Character = nullptr;
 
@@ -114,14 +134,11 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float MaxRecordTime = 4.f;
+	
+	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime) const;
 
 	void ShowFramePackage(const FFramePackage& Package, const FColor& Color) const;
 	void SaveFramePackage(FFramePackage& Package);
-	FServerSideRewindResult ServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
-		const FVector_NetQuantize& HitLocation, float HitTime);
-	
-	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter,
-		const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
 	
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime) const;
 	void CacheBoxPositions(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);

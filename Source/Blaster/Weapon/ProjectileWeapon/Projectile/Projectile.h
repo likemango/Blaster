@@ -23,7 +23,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000.f;
-
+	
+	float DamageValue = 0.f;
 protected:
 	virtual void BeginPlay() override;
 	//for replicated actor, destroyed function gonna be called in all clients!
@@ -59,9 +60,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ProjectileMesh;
-
-	UPROPERTY(EditAnywhere,Category=Damage)
-	float DamageValue = 20.f;
 
 	/*
 	 * explode damage

@@ -3,6 +3,9 @@
 
 #include "ProjectileBullet.h"
 
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
+#include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -38,7 +41,7 @@ void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FPredictProjectilePathParams ProjectilePathParams;
+	/*FPredictProjectilePathParams ProjectilePathParams;
 	ProjectilePathParams.bTraceComplex = false;
 	ProjectilePathParams.LaunchVelocity = GetActorForwardVector() * InitialSpeed;
 	ProjectilePathParams.ProjectileRadius = 5.0f;
@@ -54,20 +57,31 @@ void AProjectileBullet::BeginPlay()
 	
 	FPredictProjectilePathResult PredictProjectilePathResult;
 	UGameplayStatics::PredictProjectilePath(this, ProjectilePathParams, PredictProjectilePathResult);
+	*/
 }
 
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                               FVector NormalImpulse, const FHitResult& Hit)
 {
-	// prrojectileBullet/weapon都是同一个owner即player
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	// projectileBullet/weapon都是同一个owner即player
+	ABlasterCharacter* OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
 	if(OwnerCharacter)
 	{
-		AController* Controller = OwnerCharacter->Controller;
+		ABlasterPlayerController* Controller = Cast<ABlasterPlayerController>(OwnerCharacter->Controller);
 		if(Controller)
 		{
-			// 该方法内部调用TakeDamage
-			UGameplayStatics::ApplyDamage(OtherActor, DamageValue, Controller, this, UDamageType::StaticClass());
+			if(OwnerCharacter->HasAuthority() && !bUseServerSideRewind)
+			{
+				UGameplayStatics::ApplyDamage(OtherActor, DamageValue, Controller, this, UDamageType::StaticClass());
+				Super::OnHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
+				return;
+			}
+			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
+			if(bUseServerSideRewind && OwnerCharacter->GetLagCompensation() && OwnerCharacter->IsLocallyControlled() && HitCharacter)
+			{
+				OwnerCharacter->GetLagCompensation()->ProjectileServerScoreRequest(
+					HitCharacter, TraceStart, InitialVelocity, Controller->GetServerTime() - Controller->SingleTripTime);
+			}
 		}
 	}
 	

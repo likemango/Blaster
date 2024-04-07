@@ -267,7 +267,7 @@ void UCombatComponent::FireHitScanWeapon()
 	if (EquippedWeapon && Character)
 	{
 		LocallyHitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(LocallyHitTarget) : LocallyHitTarget;
-		if(!Character->HasAuthority())
+		if(!Character->HasAuthority()) // Only Locally-Controlled Character can fire 
 		{
 			LocalFire(LocallyHitTarget);
 		}
