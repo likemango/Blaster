@@ -34,10 +34,14 @@ public:
 	void HandleMatchHasStarted();
 	void HandleMatchCoolDown();
 	void OnMatchStateSet(FName NewState);
+	virtual void SetupInputComponent() override;
 	
 	float SingleTripTime = 0.f;
 	FHighPingDelegate HighPingDelegate;
 
+	UPROPERTY(EditAnywhere,Category=HUD)
+	TSubclassOf<class UUserWidget> ReturnMenuClass;
+	
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
@@ -128,4 +132,11 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold = 50.f;
+
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenu;
+	UPROPERTY()
+	bool bReturnMenuOpened = false;
+
+	void TriggerExitButton();
 };

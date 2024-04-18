@@ -11,6 +11,7 @@
 #include "Blaster/GameModes/BlasterGameMode.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/HUD/Announcement.h"
+#include "Blaster/HUD/ReturnToMainMenu.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
@@ -428,6 +429,15 @@ void ABlasterPlayerController::OnMatchStateSet(FName NewState)
 	}
 }
 
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if(!InputComponent) return;
+
+	InputComponent->BindAction("Exit", IE_Pressed, this, &ThisClass::TriggerExitButton);
+}
+
 void ABlasterPlayerController::OnRep_MatchState()
 {
 	if(MatchState == MatchState::InProgress)
@@ -553,6 +563,27 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 		{
 			StopHighPingWarning();
 		}
+	}
+}
+
+void ABlasterPlayerController::TriggerExitButton()
+{
+	if(!ReturnMenuClass) return;
+	if(!ReturnToMainMenu)
+	{
+		ReturnToMainMenu = CreateWidget<UReturnToMainMenu>(this, ReturnMenuClass);
+	}
+	if(ReturnToMainMenu)
+	{
+		if(!bReturnMenuOpened)
+		{
+			ReturnToMainMenu->MenuSetup();
+		}
+		else
+		{
+			ReturnToMainMenu->MenuTearDown();
+		}
+		bReturnMenuOpened = !bReturnMenuOpened;
 	}
 }
 

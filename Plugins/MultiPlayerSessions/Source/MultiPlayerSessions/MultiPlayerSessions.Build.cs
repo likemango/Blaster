@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class MultiPlayerSessions : ModuleRules
+public class MultiplayerSessions : ModuleRules
 {
-	public MultiPlayerSessions(ReadOnlyTargetRules Target) : base(Target)
+	public MultiplayerSessions(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -26,9 +26,12 @@ public class MultiPlayerSessions : ModuleRules
 			new string[]
 			{
 				"Core",
-				// ... add other public dependencies that you statically link with here ...
 				"OnlineSubsystem",
-				"OnlineSubsystemSteam"
+				"OnlineSubsystemSteam",
+				"UMG",
+				"Slate",
+				"SlateCore"
+				// ... add other public dependencies that you statically link with here ...
 			}
 			);
 			
@@ -40,7 +43,6 @@ public class MultiPlayerSessions : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"UMG"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

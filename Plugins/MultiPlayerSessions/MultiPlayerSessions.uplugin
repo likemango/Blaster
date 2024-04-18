@@ -2,10 +2,10 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "MultiPlayerSessions",
-	"Description": "A plugin support multi-player online on steam region servers",
+	"FriendlyName": "MultiplayerSessions",
+	"Description": "A plugin for handling online multiplayer sessions",
 	"Category": "Other",
-	"CreatedBy": "XiaoYao",
+	"CreatedBy": "Stephen Ulibarri",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
@@ -16,7 +16,7 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "MultiPlayerSessions",
+			"Name": "MultiplayerSessions",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

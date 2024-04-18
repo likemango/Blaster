@@ -14,16 +14,18 @@ UCLASS()
 class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 {
 	GENERATED_BODY()
-
 public:
-
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup(int32 NumberOfPublicConnection = 4, FString TypeOfMath = FString(TEXT("FreeForAll")), FString PathOfLobby = TEXT("/Game/Maps/Lobby"));
+	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/ThirdPersonCPP/Maps/Lobby")));
 
 protected:
+
 	virtual bool Initialize() override;
 	virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;
 
+	//
+	// Callbacks for the custom delegates on the MultiplayerSessionsSubsystem
+	//
 	UFUNCTION()
 	void OnCreateSession(bool bWasSuccessful);
 	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
@@ -32,24 +34,27 @@ protected:
 	void OnDestroySession(bool bWasSuccessful);
 	UFUNCTION()
 	void OnStartSession(bool bWasSuccessful);
+
 private:
 
-	UPROPERTY(meta=(BindWidget))
+	UPROPERTY(meta = (BindWidget))
 	class UButton* HostButton;
-	UPROPERTY(meta=(BindWidget))
+
+	UPROPERTY(meta = (BindWidget))
 	UButton* JoinButton;
-	
+
 	UFUNCTION()
 	void HostButtonClicked();
+
 	UFUNCTION()
 	void JoinButtonClicked();
 
 	void MenuTearDown();
-	
-	class UMultiPlayerSessionSubsystem* MultiPlayerSessionSubsystem;
+
+	// The subsystem designed to handle all online session functionality
+	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
 	int32 NumPublicConnections{4};
 	FString MatchType{TEXT("FreeForAll")};
-	FString LobbyPath{FString("")};
-
+	FString PathToLobby{TEXT("")};
 };
