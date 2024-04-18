@@ -10,6 +10,8 @@
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
+class UNiagaraSystem;
+class UNiagaraComponent;
 class USoundCue;
 class UTimelineComponent;
 
@@ -58,7 +60,10 @@ public:
 	bool bPlayerLeft;
 	UFUNCTION(Server, Reliable)
 	void ServerPlayerLeftGame();
-	
+	UFUNCTION(NetMulticast, Reliable)
+	void OnLeadTheCrown();
+	UFUNCTION(NetMulticast, Reliable)
+	void OnLoseTheCrown();
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
@@ -181,6 +186,11 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	float RespawnTime = 3.0f;
 
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* CrownCompSystem;
+	UPROPERTY()
+	UNiagaraComponent* CrownComponent;
+	
 	/*
 	 * Dissolve effect
 	 */

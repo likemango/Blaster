@@ -4,11 +4,14 @@
 #include "BlasterCharacter.h"
 
 #include "BlasterAnimInstance.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameModes/BlasterGameMode.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/Weapon/Weapon.h"
@@ -510,6 +513,10 @@ void ABlasterCharacter::MulticastEliminate_Implementation(bool bLeftGame)
 	{
 		ShowSniperScopeWidget(false);
 	}
+	if(CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
+	}
 	GetWorldTimerManager().SetTimer(
 		RespawnTimer,
 		this,
@@ -740,6 +747,14 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
+
+			if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
+			{
+				if(BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
+				{
+					OnLeadTheCrown();
+				}
+			}
 		}
 	}
 }
@@ -827,6 +842,35 @@ void ABlasterCharacter::OnRespawnTimerFinished()
 		OnPlayerLeft.Broadcast();
 	}
 }
+
+
+void ABlasterCharacter::OnLeadTheCrown_Implementation()
+{
+	if(!CrownComponent)
+	{
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownCompSystem,
+			GetCapsuleComponent(),
+			FName(),
+			GetActorLocation() + FVector(0,0,110.f),
+			FRotator::ZeroRotator,
+			EAttachLocation::KeepWorldPosition,
+			false
+		);
+	}
+	if(CrownComponent)
+	{
+		CrownComponent->Activate();
+	}
+}
+
+void ABlasterCharacter::OnLoseTheCrown_Implementation()
+{
+	if(CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
+	}
+}
+
 
 void ABlasterCharacter::StartDissolve()
 {

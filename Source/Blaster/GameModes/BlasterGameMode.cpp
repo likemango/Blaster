@@ -66,8 +66,30 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, 
 	
 	if(AttackerPlayerState && AttackerPlayerState != VictimPlayerState && BlasterGameState)
 	{
+		TArray<ABlasterPlayerState*> OldTopScores;
+		for(ABlasterPlayerState* PlayerState : BlasterGameState->TopScoringPlayers)
+		{
+			OldTopScores.Emplace(PlayerState);
+		}
 		AttackerPlayerState->AddToScore(1.f);
 		BlasterGameState->UpdateTopScores(AttackerPlayerState);
+		if(BlasterGameState->TopScoringPlayers.Contains(AttackerPlayerState))
+		{
+			if(ABlasterCharacter* Character = Cast<ABlasterCharacter>(AttackerPlayerState->GetPawn()))
+			{
+				Character->OnLeadTheCrown();
+			}
+		}
+		for(ABlasterPlayerState* PlayerState : OldTopScores)
+		{
+			if(!BlasterGameState->TopScoringPlayers.Contains(PlayerState))
+			{
+				if(ABlasterCharacter* Character = Cast<ABlasterCharacter>(PlayerState->GetPawn()))
+				{
+					Character->OnLoseTheCrown();
+				}
+			}
+		}
 	}
 	if(VictimPlayerState)
 	{
