@@ -173,6 +173,20 @@ void ABlasterCharacter::SetIsInCoolDownState(bool NewState)
 	bInCoolDownTime = NewState;
 }
 
+void ABlasterCharacter::ServerPlayerLeftGame_Implementation()
+{
+	// GameMode只能在服务器端获取到
+	if(ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+	{
+		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+		if(BlasterPlayerController)
+		{
+			BlasterPlayerState = BlasterPlayerState == nullptr ? Cast<ABlasterPlayerState>(BlasterPlayerController->PlayerState) : BlasterPlayerState;
+			BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
+		}
+	}
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -439,20 +453,15 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0;
 }
 
-void ABlasterCharacter::Eliminate()
+void ABlasterCharacter::Eliminate(bool bLeftGame)
 {
 	DropOrDestroyWeapons();
 	
-	MulticastEliminate();
-	GetWorldTimerManager().SetTimer(
-		RespawnTimer,
-		this,
-		&ThisClass::OnRespawnTimerFinished,
-		RespawnTime
-	);
+	MulticastEliminate(bLeftGame);
 }
-void ABlasterCharacter::MulticastEliminate_Implementation()
+void ABlasterCharacter::MulticastEliminate_Implementation(bool bLeftGame)
 {
+	bPlayerLeft = bLeftGame;
 	if(BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDWeaponAmmo(0);
@@ -501,6 +510,12 @@ void ABlasterCharacter::MulticastEliminate_Implementation()
 	{
 		ShowSniperScopeWidget(false);
 	}
+	GetWorldTimerManager().SetTimer(
+		RespawnTimer,
+		this,
+		&ThisClass::OnRespawnTimerFinished,
+		RespawnTime
+	);
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -800,9 +815,16 @@ void ABlasterCharacter::OnRep_Shield(float LastShield)
 void ABlasterCharacter::OnRespawnTimerFinished()
 {
 	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-	if(BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::CoolDown)
+	if(BlasterGameMode && !bPlayerLeft)
 	{
-		BlasterGameMode->RespawnCharacter(this, Controller);
+		if(BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::CoolDown)
+		{
+			BlasterGameMode->RespawnCharacter(this, Controller);
+		}
+	}
+	if(bPlayerLeft && IsLocallyControlled())
+	{
+		OnPlayerLeft.Broadcast();
 	}
 }
 

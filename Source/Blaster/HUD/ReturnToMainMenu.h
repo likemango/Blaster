@@ -28,6 +28,8 @@ private:
 
 	UFUNCTION()
 	void ReturnButtonClicked();
+	UFUNCTION()
+	void OnPlayerLeftGame();
 
 	UPROPERTY()
 	class APlayerController* PlayerController;

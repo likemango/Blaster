@@ -13,6 +13,8 @@
 class USoundCue;
 class UTimelineComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLeft);
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
@@ -37,10 +39,10 @@ public:
 	FVector GetHitTarget() const;
 	virtual void OnRep_ReplicatedMovement() override;
 
-	void Eliminate();
+	void Eliminate(bool bLeftGame);
 	
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastEliminate();
+	void MulticastEliminate(bool bLeftGame);
 
 	void SetIsInCoolDownState(bool NewState);
 
@@ -49,12 +51,21 @@ public:
 
 	UPROPERTY()
 	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
+
+	FOnPlayerLeft OnPlayerLeft;
+	
+	UPROPERTY()
+	bool bPlayerLeft;
+	UFUNCTION(Server, Reliable)
+	void ServerPlayerLeftGame();
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
 	
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+	
 	void Turn(float Value);
 	void LookUp(float Value);
 	void EquipButtonPressed();

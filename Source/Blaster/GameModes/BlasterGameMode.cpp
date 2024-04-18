@@ -76,7 +76,7 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, 
 	
 	if(EliminatedCharacter)
 	{
-		EliminatedCharacter->Eliminate();
+		EliminatedCharacter->Eliminate(false);
 	}
 }
 
@@ -106,6 +106,23 @@ void ABlasterGameMode::OnMatchStateSet()
 		if(BlasterPlayerController)
 		{
 			BlasterPlayerController->OnMatchStateSet(MatchState);
+		}
+	}
+}
+
+void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* LeavingPlayerState)
+{
+	if(LeavingPlayerState)
+	{
+		ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(GameState);
+		if(BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(LeavingPlayerState))
+		{
+			BlasterGameState->TopScoringPlayers.Remove(LeavingPlayerState);
+		}
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(LeavingPlayerState->GetPawn());
+		if(BlasterCharacter)
+		{
+			BlasterCharacter->Eliminate(true);
 		}
 	}
 }
