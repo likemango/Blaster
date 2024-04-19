@@ -438,6 +438,24 @@ void ABlasterPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Exit", IE_Pressed, this, &ThisClass::TriggerExitButton);
 }
 
+void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Vitim)
+{
+	ClientElimAnnouncement(Attacker, Vitim);
+}
+
+void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Vicitm)
+{
+	APlayerState* Self = GetPlayerState<APlayerState>();
+	if(Attacker && Vicitm && Self)
+	{
+		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+		if(BlasterHUD)
+		{
+			BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Vicitm->GetPlayerName());
+		}
+	}
+}
+
 void ABlasterPlayerController::OnRep_MatchState()
 {
 	if(MatchState == MatchState::InProgress)

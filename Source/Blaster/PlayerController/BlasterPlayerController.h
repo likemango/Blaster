@@ -35,6 +35,9 @@ public:
 	void HandleMatchCoolDown();
 	void OnMatchStateSet(FName NewState);
 	virtual void SetupInputComponent() override;
+	void BroadcastElim(APlayerState* Attacker, APlayerState* Vitim);
+	UFUNCTION(Client, Reliable)
+	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Vicitm);
 	
 	float SingleTripTime = 0.f;
 	FHighPingDelegate HighPingDelegate;

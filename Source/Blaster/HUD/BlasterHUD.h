@@ -45,7 +45,14 @@ public:
 	UPROPERTY()
 	UAnnouncement* AnnouncementOverlay;
 	void AddAnnouncementOverlay();
-	
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class  UUserWidget> ElimAnnouncementClass;
+	UPROPERTY()
+	class UElimAnnouncement* ElimAnnouncement;
+	void AddElimAnnouncement(const FString& Attacker, const FString& Victim);
+	UFUNCTION()
+	void RemoveElimAnnouncement(UElimAnnouncement* MsgToRemove);
 protected:
 	void BeginPlay() override;
 	
@@ -55,6 +62,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float CrosshairSpreadMax = 16.f;
+
+	UPROPERTY()
+	TArray<UElimAnnouncement*> ElimAnnouncements;
+	UPROPERTY(EditAnywhere)
+	float ElimAnnouncementDisappearTime = 3.f;
+	
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) {HUDPackage = Package;}
 };
