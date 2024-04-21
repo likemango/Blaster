@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/BlasterTypes/TeamTypes.h"
 #include "GameFramework/PlayerState.h"
 #include "BlasterPlayerState.generated.h"
 
@@ -33,4 +34,11 @@ private:
 
 	UPROPERTY(ReplicatedUsing=OnRep_Defeats)
 	int32 Defeats;
+
+	UPROPERTY(Replicated)
+	ETeamTypes TeamType = ETeamTypes::ET_NoTeam;
+
+public:
+	FORCEINLINE ETeamTypes GetTeamType() const { return TeamType;}
+	FORCEINLINE void SetTeamType(ETeamTypes NewType) { TeamType = NewType;}
 };
