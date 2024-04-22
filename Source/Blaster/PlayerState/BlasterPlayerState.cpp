@@ -44,6 +44,25 @@ void ABlasterPlayerState::AddToDefeats(int32 DefeatAmount)
 	}	
 }
 
+void ABlasterPlayerState::OnRep_TeamColor()
+{
+	if(GetPawn())
+	{
+		BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : BlasterCharacter;
+		BlasterCharacter->SetTeamColor(TeamType);
+	}
+}
+
+void ABlasterPlayerState::SetTeamType(ETeamTypes NewType)
+{
+	TeamType = NewType;
+	if(GetPawn())
+	{
+		BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : BlasterCharacter;
+		BlasterCharacter->SetTeamColor(TeamType);
+	}
+}
+
 
 void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

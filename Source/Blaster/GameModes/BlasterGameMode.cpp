@@ -60,6 +60,8 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
 {
+	if(!AttackerController || !VictimController || !EliminatedCharacter) return;
+	
 	ABlasterPlayerState* AttackerPlayerState = AttackerController->GetPlayerState<ABlasterPlayerState>();
 	ABlasterPlayerState* VictimPlayerState = VictimController->GetPlayerState<ABlasterPlayerState>();
 	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();

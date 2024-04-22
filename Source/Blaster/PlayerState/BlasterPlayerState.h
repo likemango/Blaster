@@ -35,10 +35,13 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_Defeats)
 	int32 Defeats;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_TeamColor)
 	ETeamTypes TeamType = ETeamTypes::ET_NoTeam;
 
+	UFUNCTION()
+	void OnRep_TeamColor();
+	
 public:
 	FORCEINLINE ETeamTypes GetTeamType() const { return TeamType;}
-	FORCEINLINE void SetTeamType(ETeamTypes NewType) { TeamType = NewType;}
+	void SetTeamType(ETeamTypes NewType);
 };

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/BlasterTypes/TeamTypes.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "Blaster/Interface/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
@@ -64,6 +65,8 @@ public:
 	void OnLeadTheCrown();
 	UFUNCTION(NetMulticast, Reliable)
 	void OnLoseTheCrown();
+
+	void SetTeamColor(ETeamTypes Team);
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
@@ -210,8 +213,26 @@ private:
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
 
 	// Material instance set on the Blueprint, used with the dynamic material instance
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstance* DissolveMaterialInst;
+
+	/*
+	 * Team Color
+	 */
 	UPROPERTY(EditAnywhere, Category = Elim)
-	UMaterialInstance* DissolveMaterialInstance;
+	UMaterialInstance* RedDissolveMatInst;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* RedMaterial;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* BlueDissolveMatInst;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* BlueMaterial;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* OriginalMaterial;
 
 	// Elim bot particle effects
 	UPROPERTY(EditAnywhere)

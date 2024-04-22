@@ -190,6 +190,26 @@ void ABlasterCharacter::ServerPlayerLeftGame_Implementation()
 	}
 }
 
+void ABlasterCharacter::SetTeamColor(ETeamTypes Team)
+{
+	if (GetMesh() == nullptr || OriginalMaterial == nullptr) return;
+	switch (Team)
+	{
+	case ETeamTypes::ET_NoTeam:
+		GetMesh()->SetMaterial(0, OriginalMaterial);
+		DissolveMaterialInst = BlueDissolveMatInst;
+		break;
+	case ETeamTypes::ET_BlueTeam:
+		GetMesh()->SetMaterial(0, BlueMaterial);
+		DissolveMaterialInst = BlueDissolveMatInst;
+		break;
+	case ETeamTypes::ET_RedTeam:
+		GetMesh()->SetMaterial(0, RedMaterial);
+		DissolveMaterialInst = RedDissolveMatInst;
+		break;
+	}
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -320,6 +340,10 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 			// 这使得该component的Owner无法看到该component
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
+		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
+		{
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
 	}
 	else
 	{
@@ -328,6 +352,10 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 		{
 			// 这使得该component的Owner无法看到该component
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
+		{
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
@@ -473,9 +501,9 @@ void ABlasterCharacter::MulticastEliminate_Implementation(bool bLeftGame)
 	PlayElimMontage();
 
 	// Eliminate effect
-	if (DissolveMaterialInstance)
+	if (DissolveMaterialInst)
 	{
-		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
+		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInst, this);
 		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
@@ -493,6 +521,7 @@ void ABlasterCharacter::MulticastEliminate_Implementation(bool bLeftGame)
 	// Disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GrenadeMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	// Elim bot particles
 	if(ElimBotEffect)
 	{
@@ -747,7 +776,7 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
-
+			SetTeamColor(BlasterPlayerState->GetTeamType());
 			if(ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
 			{
 				if(BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
@@ -849,7 +878,7 @@ void ABlasterCharacter::OnLeadTheCrown_Implementation()
 	if(!CrownComponent)
 	{
 		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownCompSystem,
-			GetCapsuleComponent(),
+			GetMesh(),
 			FName(),
 			GetActorLocation() + FVector(0,0,110.f),
 			FRotator::ZeroRotator,
