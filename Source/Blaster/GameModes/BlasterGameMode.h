@@ -36,6 +36,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+
+	UPROPERTY()
+	bool bTeamsMatch = false;
+	
 private:
 	float CountDownTime = 0.f;
 };

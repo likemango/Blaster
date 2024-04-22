@@ -31,9 +31,9 @@ public:
 	void SetHUDAnnouncementCountdown(float TimeSeconds);
 	void SetHUDShield(float NewShield, float MaxShield);
 	float GetServerTime() const;
-	void HandleMatchHasStarted();
+	void HandleMatchHasStarted(bool bTeamsMatch = false);
 	void HandleMatchCoolDown();
-	void OnMatchStateSet(FName NewState);
+	void OnMatchStateSet(FName NewState, bool bTeamsMatch = false);
 	virtual void SetupInputComponent() override;
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Vitim);
 	UFUNCTION(Client, Reliable)
@@ -44,6 +44,12 @@ public:
 
 	UPROPERTY(EditAnywhere,Category=HUD)
 	TSubclassOf<class UUserWidget> ReturnMenuClass;
+	
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHUDRedTeamScore(int32 RedScore);
+	void SetHUDBlueTeamScore(int32 BlueScore);
+
 	
 protected:
 	virtual void BeginPlay() override;
@@ -82,6 +88,12 @@ private:
 
 	UPROPERTY(ReplicatedUsing=OnRep_MatchState)
 	FName MatchState;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
 
 	UFUNCTION()
 	void OnRep_MatchState();
