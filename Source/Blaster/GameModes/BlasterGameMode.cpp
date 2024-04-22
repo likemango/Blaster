@@ -142,6 +142,11 @@ void ABlasterGameMode::OnMatchStateSet()
 	}
 }
 
+float ABlasterGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)
+{
+	return BaseDamage;
+}
+
 void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* LeavingPlayerState)
 {
 	if(LeavingPlayerState)

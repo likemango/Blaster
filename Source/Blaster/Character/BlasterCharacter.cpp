@@ -806,6 +806,11 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	{
 		return;
 	}
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	if(!BlasterGameMode) return;
+	Damage = BlasterGameMode->CalculateDamage(InstigatedBy, Controller, Damage);
+	if(Damage <= 0) return;
+
 	float DamageToHealth = Damage;
 	if (Shield > 0.f)
 	{
@@ -828,14 +833,9 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	PlayHitReactMontage();
 	if(Health == 0.f)
 	{
-		// GameMode只能在服务器端获取到
-		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-		if(BlasterGameMode)
-		{
-			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
-			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatedBy);
-			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
-		}
+		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+		ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatedBy);
+		BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
 	}
 }
 void ABlasterCharacter::OnRep_Health(float LastHealth)

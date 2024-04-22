@@ -23,8 +23,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000.f;
-	
+
+	UPROPERTY(EditAnywhere)
 	float DamageValue = 0.f;
+	
 protected:
 	virtual void BeginPlay() override;
 	//for replicated actor, destroyed function gonna be called in all clients!
