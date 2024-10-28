@@ -577,7 +577,10 @@ void ABlasterPlayerController::ShowPing()
 		BlasterHUD->CharacterOverlay->PingText;
 	if (bHUDValid)
 	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if(!PlayerState)
+		{
+			PlayerState = GetPlayerState<APlayerState>();
+		}
 		if(PlayerState)
 		{
 			int32 PingValue = PlayerState->GetCompressedPing() * 4;
@@ -628,7 +631,10 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 	PingRunningTime += DeltaTime;
 	if (PingRunningTime > CheckPingFrequency)
 	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if(!PlayerState)
+		{
+			PlayerState = GetPlayerState<APlayerState>();
+		}
 		if (PlayerState)
 		{
 			if (PlayerState->GetCompressedPing() * 4 > HighPingThreshold)

@@ -6,10 +6,11 @@
 #include "Components/TextBlock.h"
 #include "GameFramework/PlayerState.h"
 
-void UOverHeadWidget::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
+void UOverHeadWidget::NativeDestruct()
 {
 	RemoveFromParent();
-	Super::OnLevelRemovedFromWorld(InLevel, InWorld);
+
+	Super::NativeDestruct();
 }
 
 FString UOverHeadWidget::GetRemoteNetRole(APawn* InPawn)

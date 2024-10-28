@@ -15,7 +15,7 @@ class BLASTER_API UOverHeadWidget : public UUserWidget
 	GENERATED_BODY()
 
 protected:
-	virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;
+	virtual void NativeDestruct() override;
 
 public:
 	UPROPERTY(meta=(BindWidget))
