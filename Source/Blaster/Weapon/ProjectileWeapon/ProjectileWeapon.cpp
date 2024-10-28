@@ -6,6 +6,8 @@
 #include "Blaster/Weapon/ProjectileWeapon/Projectile/Projectile.h"
 #include "Engine/SkeletalMeshSocket.h"
 
+PRAGMA_DISABLE_OPTIMIZATION
+
 void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
@@ -75,3 +77,4 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 	}
 }
 
+PRAGMA_ENABLE_OPTIMIZATION

@@ -25,6 +25,7 @@ AProjectile::AProjectile()
 	BoxComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	BoxComponent->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
 }
+PRAGMA_DISABLE_OPTIMIZATION
 
 void AProjectile::BeginPlay()
 {
@@ -46,6 +47,7 @@ void AProjectile::BeginPlay()
 		BoxComponent->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
 	}
 }
+PRAGMA_ENABLE_OPTIMIZATION
 
 void AProjectile::Destroyed()
 {
