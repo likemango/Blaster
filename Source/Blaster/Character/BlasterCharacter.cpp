@@ -4,9 +4,12 @@
 #include "BlasterCharacter.h"
 
 #include "BlasterAnimInstance.h"
+#include "IAnimationBudgetAllocator.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "SkeletalMeshComponentBudgeted.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/Animations/SKGAnimInstance.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
@@ -27,6 +30,10 @@
 #include "Sound/SoundCue.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "Components/BoxComponent.h"
+#include "SKGShooterFramework/Public/Components/SKGShooterPawnComponent.h"
+#include "Statics/SKGAnimationBudgetAllocatorFunctionsLibrary.h"
+#include "AnimationBudgetAllocator/Private/AnimationBudgetAllocatorModule.h"
+#include "Components/SKGAttachmentManagerComponent.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -35,53 +42,52 @@ ABlasterCharacter::ABlasterCharacter()
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
-	CameraBoom->TargetArmLength = 600.f;
-	CameraBoom->bUsePawnControlRotation = true;
+	// CameraBoom->TargetArmLength = 600.f;
+	// CameraBoom->bUsePawnControlRotation = true;
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	FollowCamera->bUsePawnControlRotation = false;
+	FollowCamera->SetupAttachment(GetMesh(), FName("S_Camera"));
+	// FollowCamera->bUsePawnControlRotation = false;
 
 	// 设置Controller如何影响Character的朝向
-	bUseControllerRotationYaw = false; // 如果是true，那么角色会持续朝向control的Yaw朝向
-	GetCharacterMovement()->bOrientRotationToMovement = true; // 使用rotateRate去转向朝向
+	// bUseControllerRotationYaw = false; // 如果是true，那么角色会持续朝向control的Yaw朝向
+	// GetCharacterMovement()->bOrientRotationToMovement = true; // 使用rotateRate去转向朝向
 
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverHeadWidget"));
 	WidgetComponent->SetupAttachment(RootComponent);
 	
-	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	Combat->SetIsReplicated(true);
+	// Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	// Combat->SetIsReplicated(true);
 
-	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComp"));
-	Buff->SetIsReplicated(true);
+	// Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComp"));
+	// Buff->SetIsReplicated(true);
 
-	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
+	// LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
 
-	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	// GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
-	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	// TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
 
 	// how fast character turn rotation. Should 'bOrientRotationToMovement' to true.
-	GetCharacterMovement()->RotationRate = FRotator(0,850.f,0);
+	// GetCharacterMovement()->RotationRate = FRotator(0,850.f,0);
 	// always spawn character
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+	// DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
 
 	GrenadeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GrenadeMesh"));
 	GrenadeMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GrenadeMesh->SetupAttachment(GetMesh(), FName(TEXT("GrenadeSocket")));
 
 	/** 
-	* Hit boxes for server-side rewind
+	* Hit boxes for server-side rewind, hidden for now.
 	*/
-
-	head = CreateDefaultSubobject<UBoxComponent>(TEXT("head"));
+	/*head = CreateDefaultSubobject<UBoxComponent>(TEXT("head"));
 	head->SetupAttachment(GetMesh(), FName("head"));
 	HitCollisionBoxes.Add(FName("head"), head);
 
@@ -159,7 +165,12 @@ ABlasterCharacter::ABlasterCharacter()
 		HitBoxPair.Value->SetCollisionResponseToAllChannels(ECR_Ignore);
 		HitBoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
 		HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
+	}*/
+	
+	AttachmentManagerComponent = CreateDefaultSubobject<USKGAttachmentManagerComponent>("SKGAttachmentManagerComp");
+	ShooterPawnComponent = CreateDefaultSubobject<USKGShooterPawnComponent>("ShooterPawnComponent");
+	ShooterPawnComponent->OnHeldActorSet.AddDynamic(this, &ABlasterCharacter::OnHeldActorSet);
+	ShooterPawnComponent->OnPoseComplete.AddDynamic(this, &ABlasterCharacter::OnPoseComplete);
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -169,6 +180,10 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
 	DOREPLIFETIME(ABlasterCharacter, Shield);
+
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, FirearmOnBack, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, FirearmToSwitchTo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, PistolInHolster, COND_OwnerOnly);
 }
 
 void ABlasterCharacter::SetIsInCoolDownState(bool NewState)
@@ -213,7 +228,14 @@ void ABlasterCharacter::SetTeamColor(ETeamTypes Team)
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	SpawnDefaultWeapon();
+	// SpawnDefaultWeapon();
+
+	SetOnlyTickPoseWhenRenderedDedicated();
+	SetupAnimationBudgetAllocator();
+	// SpawnInitialFirearm();
+	BindToAnimBPEvent();
+	BindToPlayerControllerEvent();
+	
 	UpdateHUDAmmo();
 	UpdateHealthHUD();
 	UpdateHUDShield();
@@ -270,6 +292,309 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 	}
 }
 
+bool ABlasterCharacter::IsDead()
+{
+	return false;
+}
+
+void ABlasterCharacter::PickUpActor(AActor* Actor)
+{
+	if(IsHoldingActor())
+	{
+		FName SocketName;
+		if(AttachNonEquippedActor(Actor, SocketName))
+		{
+			Cast<IInteractInterface>(Actor)->OnPickup(GetMesh(), SocketName);
+		}
+	}
+	else
+	{
+		AttachEquipActor(Actor);
+		Cast<IInteractInterface>(Actor)->OnPickup(GetMesh(), FirearmAttachSockName);
+	}
+}
+
+void ABlasterCharacter::OnRep_FirearmToSwitchTo()
+{
+	if(!IsLocallyControlled())
+	{
+		GetSKGAnimInstance()->StartUnequip();
+	}
+}
+
+bool ABlasterCharacter::IsHoldingActor() const
+{
+	return ShooterPawnComponent->GetHeldActor() != nullptr;
+}
+
+void ABlasterCharacter::AttachEquipActor(AActor* InFirearmToEquip)
+{
+	ShooterPawnComponent->SetHeldActor(InFirearmToEquip);
+	FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
+	InFirearmToEquip->AttachToComponent(GetMesh(), AttachmentTransformRules, FirearmAttachSockName);
+	InFirearmToEquip->SetOwner(this);
+}
+
+bool ABlasterCharacter::AttachNonEquippedActor(AActor* Actor, FName& OutSocketName)
+{
+	if(IWeaponInterface* FirearmInterface = Cast<IWeaponInterface>(Actor))
+	{
+		EBlasterWeaponPriorityType PriorityType = FirearmInterface->GetWeaponPriorityType();
+		if(PriorityType == EBlasterWeaponPriorityType::Primary)
+		{
+			if(FirearmOnBack)
+				return false;
+			FirearmOnBack = Actor;
+			OutSocketName = Cast<IInteractInterface>(Actor)->GetAttachSocket();
+			FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
+			Actor->AttachToComponent(GetMesh(), AttachmentTransformRules, OutSocketName);
+			return true;
+		}
+		if(PriorityType == EBlasterWeaponPriorityType::Secondary)
+		{
+			if(PistolInHolster)
+				return false;
+			PistolInHolster = Actor;
+			OutSocketName = Cast<IInteractInterface>(Actor)->GetAttachSocket();
+			FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
+			Actor->AttachToComponent(GetMesh(), AttachmentTransformRules, OutSocketName);
+			return true;
+		}
+	}
+	else
+	{
+		OutSocketName = Cast<IInteractInterface>(Actor)->GetAttachSocket();
+		FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
+		Actor->AttachToComponent(GetMesh(), AttachmentTransformRules, OutSocketName);
+		return true;
+	}
+	return false;
+}
+
+FAttachmentTransformRules ABlasterCharacter::CreateFirearmAttachmentRules() const
+{
+	FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget,
+				EAttachmentRule::KeepWorld, true);
+	return AttachmentTransformRules;
+}
+
+bool ABlasterCharacter::ShouldSwapWeapons() const
+{
+	if(!bIsPerformingAction && FirearmOnBack != nullptr)
+		return true;
+	return false;
+}
+
+void ABlasterCharacter::SwapWeapons()
+{
+	bIsPerformingAction = true;
+	StopAiming();
+	GetSKGAnimInstance()->StartUnequip();
+	FirearmToSwitchTo = FirearmOnBack;
+	OnRep_FirearmToSwitchTo();
+	if(!HasAuthority())
+	{
+		Server_SwapWeapons();
+	}
+}
+
+void ABlasterCharacter::StartAiming()
+{
+	bWantsToAim = true;
+	if(!bIsPerformingAction)
+	{
+		ShooterPawnComponent->StartAiming();	
+	}
+}
+
+void ABlasterCharacter::StopAiming()
+{
+	bWantsToAim = false;
+	ShooterPawnComponent->StopAiming();
+}
+
+USKGAnimInstance* ABlasterCharacter::GetSKGAnimInstance()
+{
+	if(!SKGAnimInstance)
+	{
+		SKGAnimInstance = Cast<USKGAnimInstance>(GetMesh()->GetAnimInstance());
+	}
+	return SKGAnimInstance;
+}
+
+void ABlasterCharacter::Server_SwapWeapons_Implementation()
+{
+	FirearmToSwitchTo = FirearmOnBack;
+}
+
+void ABlasterCharacter::OnHeldActorSet(AActor* NewHeldActor, AActor* OldHeldActor)
+{
+	if(NewHeldActor)
+	{
+		ShooterPawnComponent->UnlinkAnimLayerClass();
+		ShooterPawnComponent->LinkAnimLayerClass(SKGAnimLayerArmed);
+	}
+	else
+	{
+		ShooterPawnComponent->UnlinkAnimLayerClass();
+		ShooterPawnComponent->LinkAnimLayerClass(SKGAnimLayerUnarmed);
+	}
+	BindToFirearmEvents(NewHeldActor);
+	UnbindFromFirearmEvents(OldHeldActor);	
+}
+
+void ABlasterCharacter::OnPoseComplete(const FSKGProceduralPoseReplicationData& CurrentPoseData)
+{
+	bIsPerformingAction = false;
+}
+
+void ABlasterCharacter::BindToFirearmEvents(AActor* Actor)
+{
+	if(AWeapon* Firearm = Cast<AWeapon>(Actor))
+	{
+		Firearm->OnFired.AddDynamic(this, &ABlasterCharacter::OnFired);
+		Firearm->OnReload.AddDynamic(this, &ABlasterCharacter::OnReloading);
+		Firearm->OnActionCycled.AddDynamic(this, &ABlasterCharacter::OnActionCycled);
+		Firearm->OnMagnifierFlipped.AddDynamic(this, &ABlasterCharacter::OnMagnifierFlipped);
+	}
+}
+
+void ABlasterCharacter::UnbindFromFirearmEvents(AActor* Actor)
+{
+	if(AWeapon* Firearm = Cast<AWeapon>(Actor))
+	{
+		Firearm->OnFired.RemoveDynamic(this, &ABlasterCharacter::OnFired);
+		Firearm->OnReload.RemoveDynamic(this, &ABlasterCharacter::OnReloading);
+		Firearm->OnActionCycled.RemoveDynamic(this, &ABlasterCharacter::OnActionCycled);
+		Firearm->OnMagnifierFlipped.RemoveDynamic(this, &ABlasterCharacter::OnMagnifierFlipped);
+	}
+}
+
+void ABlasterCharacter::OnFired(const FRotator& RecoilControlRotationMultiplier,
+	const FVector& RecoilLocationMultiplier, const FRotator& RecoilRotationMultiplier,
+	const FAnimationMontageData& AnimationData)
+{
+	ShooterPawnComponent->PerformProceduralRecoil(RecoilControlRotationMultiplier, RecoilLocationMultiplier,RecoilRotationMultiplier);
+	PlayAnimMontage(AnimationData.Montage, 1, AnimationData.Section);
+}
+
+void ABlasterCharacter::OnReloading(UAnimMontage* Montage)
+{
+	PlayAnimMontage(Montage);
+}
+
+void ABlasterCharacter::OnActionCycled(UAnimMontage* Montage)
+{
+	PlayAnimMontage(Montage);
+}
+
+void ABlasterCharacter::OnMagnifierFlipped(UAnimMontage* Montage, FName SectionName)
+{
+	PlayAnimMontage(Montage, 1, SectionName);
+}
+
+void ABlasterCharacter::SetOnlyTickPoseWhenRenderedDedicated()
+{
+	/*
+	 * Dont tick pose on dedicated server.
+	 * We will capture the pose though for a single frame on dedicated server to evaluate hits, dropping weapon, that sort of thing
+	 */
+}
+
+void ABlasterCharacter::SetupAnimationBudgetAllocator()
+{
+	/*
+	 * Sets up the animation budget allocator for all meshes except our own
+	 */
+	if(!IsLocallyControlled())
+	{
+		if(USkeletalMeshComponentBudgeted* SkeletalMeshComponentBudgeted = Cast<USkeletalMeshComponentBudgeted>(GetMesh()))
+		{
+			USKGAnimationBudgetAllocatorFunctionsLibrary::RegisterSkeletalMeshComponentBudgeted(SkeletalMeshComponentBudgeted);
+
+			// UAnimationBudgetBlueprintLibrary::EnableAnimationBudget(this, true);
+			if(UWorld* World = GEngine->GetWorldFromContextObject(this, EGetWorldErrorMode::LogAndReturnNull))
+			{
+				FAnimationBudgetAllocatorModule& AnimationBudgetAllocatorModule = FModuleManager::LoadModuleChecked<FAnimationBudgetAllocatorModule>("AnimationBudgetAllocator");
+				IAnimationBudgetAllocator* AnimationBudgetAllocator = AnimationBudgetAllocatorModule.GetBudgetAllocatorForWorld(World);
+				if(AnimationBudgetAllocator)
+				{
+					AnimationBudgetAllocator->SetEnabled(true);
+				}
+			}
+			
+		}
+	}
+}
+
+void ABlasterCharacter::SpawnInitialFirearm()
+{
+	UWorld* World = GetWorld();
+	check(World);
+	
+	if(HasAuthority())
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Owner = this;
+		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParameters.TransformScaleMethod = ESpawnActorScaleMethod::MultiplyWithRoot;
+		FTransform* Transform = new FTransform();
+		Transform->SetLocation(FVector::ZeroVector);
+		Transform->SetRotation(FQuat::Identity);
+		Transform->SetTranslation(FVector::OneVector);
+		AActor* newFirearm = World->SpawnActor(InitialFirearm, Transform, SpawnParameters);
+
+		ShooterPawnComponent->SetHeldActor(newFirearm);
+
+		FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
+		newFirearm->AttachToComponent(GetMesh(), AttachmentTransformRules, FirearmAttachSockName);
+	}
+}
+
+void ABlasterCharacter::BindToAnimBPEvent()
+{
+	GetSKGAnimInstance()->OnUnequipComplete.AddDynamic(this, &ABlasterCharacter::UnequipComplete);
+	if(IsLocallyControlled())
+	{
+		GetSKGAnimInstance()->OnEquipComplete.AddDynamic(this, &ABlasterCharacter::EquipComplete);
+	}
+}
+
+void ABlasterCharacter::BindToPlayerControllerEvent()
+{
+	// todo
+}
+
+void ABlasterCharacter::UnequipComplete()
+{
+	if(AActor* HeldActor = ShooterPawnComponent->GetHeldActor())
+	{
+		if(IInteractInterface* InteractInterface = Cast<IInteractInterface>(HeldActor))
+		{
+			FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
+			HeldActor->AttachToComponent(GetMesh(), AttachmentTransformRules, InteractInterface->GetAttachSocket());
+			FirearmOnBack = HeldActor;
+		}
+	}
+	if(FirearmToSwitchTo)
+	{
+		AttachEquipActor(FirearmToSwitchTo);
+	}
+	else
+	{
+		bIsPerformingAction = false;
+	}
+}
+
+void ABlasterCharacter::EquipComplete()
+{
+	bIsPerformingAction = false;
+	if(bWantsToAim)
+	{
+		StartAiming();
+	}
+}
+
 void ABlasterCharacter::Destroyed()
 {
 	Super::Destroyed();
@@ -323,7 +648,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
-	HideCameraIfCharacterClose();
+	// HideCameraIfCharacterClose();
 	PollInit();
 }
 
@@ -570,9 +895,9 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ThisClass::CrouchReleased);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ThisClass::AimPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ThisClass::AimReleased);
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ThisClass::FirePressed);
-	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ThisClass::FireReleased);
-	PlayerInputComponent->BindAction("Reload", IE_Released, this, &ThisClass::ReloadButtonPressed);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ThisClass::StartFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ThisClass::StopFire);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ThisClass::ReloadButtonPressed);
 	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ThisClass::ThrowGrenadePressed);
 }
 void ABlasterCharacter::MoveForward(float Value)
@@ -609,10 +934,10 @@ void ABlasterCharacter::LookUp(float Value)
 }
 void ABlasterCharacter::EquipButtonPressed()
 {
-	if (Combat)
-	{
+	// if (Combat)
+	// {
 		ServerEquipButtonPressed();
-	}
+	// }
 }
 void ABlasterCharacter::CrouchPressed()
 {
@@ -631,9 +956,13 @@ void ABlasterCharacter::CrouchReleased()
 
 void ABlasterCharacter::ReloadButtonPressed()
 {
-	if(Combat)
+	// if(Combat)
+	// {
+	// 	Combat->Reload();
+	// }
+	if(ShooterPawnComponent->GetHeldActor() && ShooterPawnComponent->GetHeldActor()->Implements<UWeaponInterface>())
 	{
-		Combat->Reload();
+		Cast<IWeaponInterface>(ShooterPawnComponent->GetHeldActor())->Reload();
 	}
 }
 
@@ -670,18 +999,30 @@ void ABlasterCharacter::Jump()
 		Super::Jump();
 	}
 }
-void ABlasterCharacter::FirePressed()
+void ABlasterCharacter::StartFire()
 {
-	if(Combat)
+	// if(Combat)
+	// {
+	// 	Combat->FireButtonPressed(true);
+	// }
+	if(bIsPerformingAction) return;
+
+	AActor* HeldActor = ShooterPawnComponent->GetHeldActor();
+	if(HeldActor && HeldActor->Implements<UWeaponInterface>())
 	{
-		Combat->FireButtonPressed(true);
+		Cast<IWeaponInterface>(HeldActor)->Fire();
 	}
 }
-void ABlasterCharacter::FireReleased()
+void ABlasterCharacter::StopFire()
 {
-	if(Combat)
+	// if(Combat)
+	// {
+	// 	Combat->FireButtonPressed(false);
+	// }
+	AActor* HeldActor = ShooterPawnComponent->GetHeldActor();
+	if(HeldActor && HeldActor->Implements<UWeaponInterface>())
 	{
-		Combat->FireButtonPressed(false);
+		Cast<IWeaponInterface>(HeldActor)->StopFire();
 	}
 }
 
@@ -964,17 +1305,18 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
-	if (Combat)
-	{
-		if (OverlappingWeapon)
+	// if (Combat)
+	// {
+		if (IInteractInterface* InteractWeapon = Cast<IInteractInterface>(OverlappingWeapon))
 		{
-			Combat->EquipWeapon(OverlappingWeapon);
+			InteractWeapon->Interact(this);
+			// Combat->EquipWeapon(OverlappingWeapon);
 		}
-		else if (Combat->ShouldSwapWeapons())
+		else if (ShouldSwapWeapons())
 		{
-			Combat->SwapWeapons();
+			SwapWeapons();
 		}
-	}
+	// }
 }
 
 float ABlasterCharacter::CalculateSpeed() const

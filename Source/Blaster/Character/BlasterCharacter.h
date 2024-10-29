@@ -7,10 +7,15 @@
 #include "Blaster/BlasterTypes/TeamTypes.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "Blaster/Interface/InteractWithCrosshairsInterface.h"
+#include "Blaster/Interface/pawnInterface.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
+class USKGAttachmentManagerComponent;
+class USKGAnimInstance;
+class USKGShooterFrameworkAnimInstance;
+class USKGShooterPawnComponent;
 class UNiagaraSystem;
 class UNiagaraComponent;
 class USoundCue;
@@ -19,7 +24,7 @@ class UTimelineComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLeft);
 
 UCLASS()
-class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
+class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface, public IPawnInterface
 {
 	GENERATED_BODY()
 
@@ -32,6 +37,65 @@ public:
 	void UpdateHUDShield();
 	void UpdateHUDAmmo();
 	void SpawnDefaultWeapon();
+
+	// IPawnInterface
+	virtual bool IsDead() override;
+	virtual void PickUpActor(AActor* Actor) override;
+	//
+
+	// SKG
+	UPROPERTY(Replicated)
+	AActor* FirearmOnBack;
+	UPROPERTY(Replicated)
+	AActor* PistolInHolster;
+	UPROPERTY(ReplicatedUsing="OnRep_FirearmToSwitchTo")
+	AActor* FirearmToSwitchTo;
+	UFUNCTION()
+	void OnRep_FirearmToSwitchTo();
+	UPROPERTY()
+	USKGAnimInstance* SKGAnimInstance;
+	UPROPERTY(EditAnywhere)
+	FName FirearmAttachSockName = FName("ik_hand_gun");
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AActor> InitialFirearm;
+	
+	bool IsHoldingActor() const;
+	void AttachEquipActor(AActor* InFirearmToEquip);
+	bool AttachNonEquippedActor(AActor* Actor, FName& OutSocketName);
+	FAttachmentTransformRules CreateFirearmAttachmentRules() const;
+	bool ShouldSwapWeapons() const;
+	void SwapWeapons();
+	void StartAiming();
+	void StopAiming();
+	USKGAnimInstance* GetSKGAnimInstance();
+	UFUNCTION(Server, Reliable)
+	void Server_SwapWeapons();
+	
+	UFUNCTION()
+	void OnHeldActorSet(AActor* NewHeldActor, AActor* OldHeldActor);
+	UFUNCTION()
+	void OnPoseComplete(const FSKGProceduralPoseReplicationData& CurrentPoseData);
+	void BindToFirearmEvents(AActor* Actor);
+	void UnbindFromFirearmEvents(AActor* Actor);
+	UFUNCTION()
+	void OnFired(const FRotator& RecoilControlRotationMultiplier, const FVector& RecoilLocationMultiplier,const FRotator& RecoilRotationMultiplier, const FAnimationMontageData& AnimationData);
+	UFUNCTION()
+	void OnReloading(UAnimMontage* Montage);
+	UFUNCTION()
+	void OnActionCycled(UAnimMontage* Montage);
+	UFUNCTION()
+	void OnMagnifierFlipped(UAnimMontage* Montage, FName SectionName);
+
+	void SetOnlyTickPoseWhenRenderedDedicated();
+	void SetupAnimationBudgetAllocator();
+	void SpawnInitialFirearm();
+	void BindToAnimBPEvent();
+	void BindToPlayerControllerEvent();
+	UFUNCTION()
+	void UnequipComplete();
+	UFUNCTION()
+	void EquipComplete();
+	//
 	
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
@@ -86,8 +150,8 @@ protected:
 	void CalculateAO_Pitch();
 	void CalculateAimOffset(float DeltaTime);
 	virtual void Jump() override;
-	void FirePressed();
-	void FireReleased();
+	void StartFire();
+	void StopFire();
 	void PlayHitReactMontage() const;
 	// poll init for some classes which is not ready when character BeginPlay()
 	void PollInit();
@@ -113,6 +177,24 @@ private:
 	
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* GrenadeMesh;
+
+	// SKG
+	UPROPERTY()
+	bool bIsPerformingAction = false;
+	UPROPERTY()
+	bool bWantsToAim = false;
+	UPROPERTY(VisibleAnywhere)
+	USKGShooterPawnComponent* ShooterPawnComponent;
+	UPROPERTY(VisibleAnywhere)
+	USKGAttachmentManagerComponent* AttachmentManagerComponent;
+	// UPROPERTY(VisibleAnywhere)
+	// UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<USKGShooterFrameworkAnimInstance> SKGAnimLayerArmed;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<USKGShooterFrameworkAnimInstance> SKGAnimLayerUnarmed;
+
+	//
 
 	// RPC(remote process call, client call server to execute)
 	// reliable: if failed, it will send again to make sure it received. Use it sparing.
@@ -334,6 +416,7 @@ public:
 	ECombatState GetCombatState() const;
 	FORCEINLINE UAnimMontage* GetReloadMontage() const{ return ReloadMontage;}
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat;}
+	FORCEINLINE USKGShooterPawnComponent* GetShooterPawnComp() const {return ShooterPawnComponent;}
 	FORCEINLINE UStaticMeshComponent* GetGrenadeMesh() const { return GrenadeMesh;}
 	FORCEINLINE UBuffComponent* GetBuff() const { return Buff;}
 	FORCEINLINE float GetShield() const { return Shield; }
@@ -341,4 +424,6 @@ public:
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
+	FORCEINLINE bool IsPerformingAction() const {return bIsPerformingAction;}
+	FORCEINLINE void SetIsPerformingAction(bool bNewState) { bIsPerformingAction = bNewState;} 
 };

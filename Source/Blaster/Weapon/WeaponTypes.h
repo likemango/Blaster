@@ -19,3 +19,10 @@ enum class EBlasterWeaponType : uint8
 	
 	EWT_MAX UMETA(DisplayName = "DefaultMax")
 };
+
+UENUM(Blueprintable)
+enum class EBlasterWeaponPriorityType : uint8
+{
+	Primary,
+	Secondary
+};

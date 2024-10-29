@@ -8,9 +8,13 @@ public class Blaster : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "MultiplayerSessions","OnlineSubsystem", "OnlineSubsystemSteam" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", 
+			"MultiplayerSessions","OnlineSubsystem", "OnlineSubsystemSteam" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "Niagara" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Niagara", 
+			"SKGMuzzle", "SKGProjectile", "SKGPhysicalMaterialModule", "SKGAttachment",  "SKGShooterFramework",
+			"AnimationBudgetAllocator", "SKGOptional", "GameplayTags", "SKGProceduralAnim", "SKGShooterFrameworkCore"
+		});
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

@@ -3,14 +3,29 @@
 
 #include "Weapon.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Blaster/Weapon/Casing/Casing.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/Interface/AmmoInterface.h"
+#include "Blaster/Interface/HitInterface.h"
+#include "Blaster/Interface/pawnInterface.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
+#include "DataTypes/SKGAttachmentDataTypes.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "PhysicalMaterial/SKGPhysicalMaterial.h"
+#include "SKGAttachment/Public/Components/SKGAttachmentManagerComponent.h"
+#include "SKGProceduralAnim/Public/Components/SKGOffHandIKComponent.h"
+#include "SKGProceduralAnim/Public/Components/SKGProceduralAnimComponent.h"
+#include "SKGShooterFramework/Public/Components/SKGFirearmComponent.h"
+#include "Sound/SoundCue.h"
+#include "Statics/SKGAttachmentHelpers.h"
+#include "Statics/SKGShooterFrameworkCoreEffectStatics.h"
+#include "Subsystems/SKGProjectileWorldSubsystem.h"
 
 
 AWeapon::AWeapon()
@@ -44,7 +59,25 @@ AWeapon::AWeapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
+
+	// SKG
+	FirearmComponent = CreateDefaultSubobject<USKGFirearmComponent>("FirearmComp");
+	ProceduralAnimComponent = CreateDefaultSubobject<USKGProceduralAnimComponent>("ProceduralAnimCompo");
+	OffHandIKComponent = CreateDefaultSubobject<USKGOffHandIKComponent>("OffHandIKComp");
+	AttachmentManagerComponent = CreateDefaultSubobject<USKGAttachmentManagerComponent>("AttachmentManagerComp");
+
+	FireModes.Emplace(FGameplayTag::RequestGameplayTag(FName("FireModes.Safe")));
+	FireModes.Emplace(FGameplayTag::RequestGameplayTag(FName("FireModes.Semi")));
+	FireModes.Emplace(FGameplayTag::RequestGameplayTag(FName("FireModes.FullAuto")));
+	CurrentFireModeTag = FGameplayTag::RequestGameplayTag(FName("FireModes.Semi"));
 	
+	FireModeIndex = FireModes.Find(CurrentFireModeTag);
+	SetupFireRate(FireRate);
+
+	AttachmentManagerComponent->OnAttachmentComponentAttachmentAdded.AddDynamic(this, &AWeapon::OnAttachmentComponentAttachmentAdded);
+	AttachmentManagerComponent->OnAttachmentComponentAttachmentRemoved.AddDynamic(this, &AWeapon::OnAttachmentComponentAttachmentRemoved);
+	AttachmentManagerComponent->OnAttachmentsChanged.AddDynamic(this, &AWeapon::OnAttachmentChanged);
+	FirearmComponent->OnProceduralAnimComponentsUpdated.AddDynamic(this, &AWeapon::OnProceduralAnimComponentsUpdated);
 }
 
 void AWeapon::BeginPlay()
@@ -60,11 +93,15 @@ void AWeapon::BeginPlay()
 	{
 		PickupWidget->SetVisibility(false);
 	}
+
+	ConstructFromPreset();
 }
 
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	InterpolateActorToTargetTransform(DeltaTime);
 }
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -172,6 +209,423 @@ void AWeapon::EnableCustomDepth(bool bEnable) const
 	if(WeaponMesh)
 	{
 		WeaponMesh->SetRenderCustomDepth(bEnable);
+	}
+}
+
+void AWeapon::ConstructFromPreset()
+{
+	if(HasAuthority())
+	{
+		if(!PresetString.IsEmpty())
+		{
+			// GEngine->AddOnScreenDebugMessage(1, 6, FColor::Red, PresetString);
+			FSKGAttachmentActor Data;
+			if(USKGAttachmentHelpers::DeserializeAttachmentManagerJson(PresetString, Data))
+			{
+				USKGAttachmentHelpers::ConstructExistingActorFromAttachmentManagerData(this, Data);
+			}
+		}
+	}
+}
+
+void AWeapon::InterpolateActorToTargetTransform(float DeltaTime)
+{
+	float InterpSpeed = 75.f;
+	FVector InterpLocation = FMath::VInterpConstantTo(GetActorLocation(), DroppedActorTargetLocation, DeltaTime, InterpSpeed);
+	FRotator InterpRotation = FMath::RInterpConstantTo(GetActorRotation(), DroppedActorTargetRotator, DeltaTime, InterpSpeed);
+	SetActorLocationAndRotation(InterpLocation, InterpRotation, false, nullptr, ETeleportType::TeleportPhysics);
+	if(GetActorLocation().Equals(DroppedActorTargetLocation, 0.1f))
+	{
+		if(GetActorRotation().Equals(DroppedActorTargetRotator, 1.f))
+		{
+			StopTickAndPhysics();
+		}
+		else
+		{
+			SetActorRotation(InterpRotation, ETeleportType::TeleportPhysics);
+		}
+	}
+}
+
+void AWeapon::SetupFireRate(float InFireRate)
+{
+	FireRateDelay = 1.f / (InFireRate / 60.f);
+}
+
+void AWeapon::OnAttachmentComponentAttachmentAdded(AActor* Attachment)
+{
+	if(Attachment->Implements<UAmmoInterface>())
+	{
+		AmmoSource = Attachment;
+		AmmoRemaining = IAmmoInterface::Execute_Demo_GetMagazineCapacity(Attachment);
+		FirearmProjectile = IAmmoInterface::Execute_Demo_GetProjectileType(Attachment);
+	}
+}
+
+void AWeapon::OnAttachmentComponentAttachmentRemoved(AActor* Attachment)
+{
+	if(IAmmoInterface* DemoAmmoSourceInterface = Cast<IAmmoInterface>(Attachment))
+	{
+		AmmoSource = nullptr;
+		FirearmProjectile = nullptr;
+	}
+}
+
+void AWeapon::OnProceduralAnimComponentsUpdated()
+{
+	if(!FirearmComponent)
+		return;
+	
+	TArray<USKGProceduralAnimComponent*> ProceduralAnimComponents = FirearmComponent->GetProceduralAnimComponents();
+	for (USKGProceduralAnimComponent* Component : ProceduralAnimComponents)
+	{
+		if(!Component)
+			continue;
+
+		// todo
+		// if(ASKGDemoMagnifier* Magnifier = Cast<ASKGDemoMagnifier>(Component->GetOwner()))
+		// {
+		// 	Magnifier->LinkOptic();;
+		// }
+	}
+}
+
+void AWeapon::OnAttachmentChanged()
+{
+	// todo
+}
+
+void AWeapon::OnMagnifierFlippedCallback(UAnimMontage* Montage, FName SectionName)
+{
+	// todo
+}
+
+void AWeapon::Fire()
+{
+	if(CanFire())
+	{
+		FSKGMuzzleTransform MuzzleTransform = GetMuzzleTransform();
+		if(HasAuthority())
+		{
+			ReplicateFireData(MuzzleTransform, true);
+		}
+		else
+		{
+			Server_Fire(MuzzleTransform);
+		}
+		FireLocal();
+	}
+}
+
+void AWeapon::StopFire()
+{
+	if(GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TFullAutoHandle);
+	}
+	if(HasAuthority())
+	{
+		ReplicateFireData(FSKGMuzzleTransform(), false);
+	}
+	else
+	{
+		Server_StopFire();
+	}
+}
+
+bool AWeapon::CanFire()
+{
+	if(FirearmProjectile && CurrentFireModeTag != FGameplayTag::RequestGameplayTag(FName("FireModes.Safe"))
+		&& AmmoRemaining > 0 && !bIsReloading)
+	{
+		if(CurrentFireModeTag != FGameplayTag::RequestGameplayTag(FName("FireModes.Semi"))
+			|| CurrentFireModeTag != FGameplayTag::RequestGameplayTag(FName("FireModes.FullAuto")))
+		{
+			if(UGameplayStatics::GetTimeSeconds(this) - LastShotTime >= FireRateDelay)
+			{
+				return true;
+			}
+			return false;
+		}
+	}
+	return false;
+}
+
+void AWeapon::Reload()
+{
+	if(FirearmProjectile && !bIsReloading)
+	{
+		if(HasAuthority())
+		{
+			bIsReloading = true;
+			OnRep_bIsReloading();
+		}
+		else
+		{
+			Server_Reload();
+			PlayReloadMontage();
+			bIsReloading = true;
+		}
+	}
+}
+
+void AWeapon::ReloadComplete()
+{
+	bIsReloading = false;
+	if(HasAuthority() && AmmoSource)
+	{
+		if(AmmoSource->Implements<UAmmoInterface>())
+		{
+			AmmoRemaining = IAmmoInterface::Execute_Demo_GetMagazineCapacity(AmmoSource);
+			FirearmProjectile = IAmmoInterface::Execute_Demo_GetProjectileType(AmmoSource);
+		}
+	}
+}
+
+void AWeapon::CycleFireMode()
+{
+	if(HasAuthority())
+	{
+		if(FireModeIndex + 1 >= FireModes.Num())
+		{
+			FireModeIndex = 0;
+		}
+		else
+		{
+			FireModeIndex = FireModeIndex + 1;
+		}
+		CurrentFireModeTag = FireModes[FireModeIndex];
+	}
+	else
+	{
+		Server_CycleFireMode();
+	}
+}
+
+EBlasterWeaponPriorityType AWeapon::GetWeaponPriorityType()
+{
+	return PriorityType;
+}
+
+void AWeapon::ActionFinishedCycling()
+{
+	// todo
+}
+
+FName AWeapon::GetAttachSocket_Implementation()
+{
+	return AttachSocket;
+}
+
+void AWeapon::Interact_Implementation(APawn* Pawn)
+{
+	if(!GetOwner())
+	{
+		Cast<IPawnInterface>(Pawn)->PickUpActor(this);
+	}
+}
+
+bool AWeapon::IsPickup_Implementation()
+{
+	// todo
+	return false;
+}
+
+void AWeapon::OnPickup_Implementation(USceneComponent* Component, FName Socket)
+{
+	if(GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TActorDroppedPhysicsHandle);
+	}
+	
+	OnPickedup(Component, Socket);
+}
+
+void AWeapon::OnDrop_Implementation()
+{
+	SkeletalMeshComponent->SetSimulatePhysics(true);
+	for (AActor* Actor: AttachmentManagerComponent->GetAttachments())
+	{
+		Actor->SetActorEnableCollision(false);
+	}
+	GetWorld()->GetTimerManager().SetTimer(TActorDroppedPhysicsHandle, this, &AWeapon::ReplicateDropPhysics, 0.1f, true);
+}
+
+bool AWeapon::CanBePickedUp_Implementation()
+{
+	return bCanGetPickedup;
+}
+
+FSKGMuzzleTransform AWeapon::GetMuzzleTransform() const
+{
+	return FirearmComponent->GetMuzzleProjectileTransform();
+}
+
+void AWeapon::ReplicateFireData(const FSKGMuzzleTransform& MuzzleTransform, bool bIsFiring)
+{
+	if(HasAuthority())
+	{
+		ProjectileReplicationData.bIsFiring = bIsFiring;
+		ProjectileReplicationData.MuzzleTransform = MuzzleTransform;
+		OnRep_ProjectileReplicationData();
+	}
+}
+
+void AWeapon::OnRep_ProjectileReplicationData()
+{
+	if(!IsLocallyControlled())
+	{
+		if(ProjectileReplicationData.bIsFiring)
+		{
+			FireRemote();
+		}
+		else
+		{
+			GetWorld()->GetTimerManager().ClearTimer(TFullAutoHandle);
+		}
+	}
+}
+
+bool AWeapon::IsLocallyControlled()
+{
+	if(APawn* Pawn = Cast<APawn>(GetOwner()))
+	{
+		return Pawn->IsLocallyControlled();
+	}
+	return false;
+}
+
+void AWeapon::FireRemote()
+{
+	TFunction<void()> Func = [this](){FireRemote();};
+	FireShot(ProjectileReplicationData.MuzzleTransform, Func);
+}
+
+void AWeapon::FireShot(FTransform MuzzleTransform, const TFunction<void()>& Func)
+{
+	if(MuzzleTransform.IsValid())
+	{
+		LaunchProjectile(FirearmProjectile, MuzzleTransform);
+		PlayFireAnimation();
+		PlayShotEffects();
+		LastShotTime = UGameplayStatics::GetTimeSeconds(this);
+		if(CurrentFireModeTag == FGameplayTag::RequestGameplayTag(FName("FireModes.FullAuto")))
+		{
+			GetWorld()->GetTimerManager().SetTimer(TFullAutoHandle, std::cref(Func) ,FireRateDelay, true);
+		}
+	}
+}
+
+void AWeapon::LaunchProjectile(USKGPDAProjectile* Projectile, FTransform MuzzleTransform)
+{
+	USKGProjectileWorldSubsystem* ProjectileWorldSubsystem = GetWorld()->GetSubsystem<USKGProjectileWorldSubsystem>();
+	FSKGOnProjectileImpact OnProjectileImpact;
+	FSKGOnProjetilePositionUpdate OnProjetilePositionUpdate;
+	OnProjectileImpact.BindDynamic(this, &AWeapon::OnImpact);
+	const TArray<AActor*> Attachments = AttachmentManagerComponent->GetAttachments();
+	ProjectileWorldSubsystem->FireProjectile(0, Projectile, Attachments, MuzzleTransform, nullptr, OnProjectileImpact, OnProjetilePositionUpdate);
+}
+
+void AWeapon::OnImpact(const FHitResult& HitResult, const FVector& Direction, const int32 ProjectileID)
+{
+	PerformImpactEffect(HitResult);
+	if(IHitInterface * HitInterface = Cast<IHitInterface>(HitResult.GetActor()))
+	{
+		float DamageAmount = CalculateDamageFromProjectile(ProjectileID);
+		HitInterface->Hit(DamageAmount, HitResult);
+	}
+}
+
+float AWeapon::CalculateDamageFromProjectile(int32 ProjectileID)
+{
+	USKGProjectileWorldSubsystem* ProjectileWorldSubsystem = GetWorld()->GetSubsystem<USKGProjectileWorldSubsystem>();
+	FSKGProjectileData ProjectileData;
+	if(ProjectileWorldSubsystem->GetProjectileByID(ProjectileID, ProjectileData))
+	{
+		// 伤害与速度相关
+		// a lot calculations.
+	}
+	return 12.f;
+}
+
+void AWeapon::PerformImpactEffect(const FHitResult& HitResult)
+{
+	if(USKGPhysicalMaterial* SKGDemoPhysicalMaterial = Cast<USKGPhysicalMaterial>(HitResult.PhysMaterial))
+	{
+		SKGDemoPhysicalMaterial->PlayEffect(HitResult, true, FGameplayTag::RequestGameplayTag(FName("Impact.Bullet")));
+	}
+}
+
+void AWeapon::PlayFireAnimation()
+{
+	FAnimationMontageData AnimationMontageData;
+	AnimationMontageData.Montage = CharacterShootMontage;
+	AnimationMontageData.Section = TEXT("None");
+	OnFired.Broadcast(ControlRotationMultiplier, RecoilLocationMultiplier, RecoilRotationMultiplier, AnimationMontageData);
+	SkeletalMeshComponent->GetAnimInstance()->Montage_Play(FirearmShootMontage);
+}
+
+void AWeapon::PlayShotEffects()
+{
+	if(USoundCue* SoundCue = GetShotSound())
+	{
+		USKGShooterFrameworkCoreEffectStatics::PlaySoundEffect(this, GetMuzzleTransform().Location, true, SoundCue, 0.2f, 1.0f, 1.0f);
+	}
+	if(UNiagaraSystem* NiagaraSystem = GetShotMuzzleParticle())
+	{
+		FTransform MuzzleTransform = FirearmComponent->GetMuzzleTransform();
+		UNiagaraFunctionLibrary::SpawnSystemAttached(NiagaraSystem, SkeletalMeshComponent, TEXT("None"), MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator(), EAttachLocation::KeepWorldPosition, false, true, ENCPoolMethod::AutoRelease, true);
+	}
+	FirearmComponent->ShotPerformed();
+}
+
+USoundCue* AWeapon::GetShotSound() const
+{
+	if(IsSuppressed())
+	{
+		return SuppressedShotSound;
+	}
+	return ShotSound;
+}
+
+bool AWeapon::IsSuppressed() const
+{
+	if(USKGMuzzleComponent* MuzzleComponent = FirearmComponent->GetCurrentMuzzleComponent())
+	{
+		FGameplayTag MuzzleTag = MuzzleComponent->GetMuzzleTag();
+		if(MuzzleTag == FGameplayTag::RequestGameplayTag(FName("MuzzleComponentType.Barrel")) || 
+			MuzzleTag == FGameplayTag::RequestGameplayTag(FName("MuzzleComponentType.MuzzleDevice")))
+		{
+			return false;
+		}
+		if(MuzzleTag == FGameplayTag::RequestGameplayTag(FName("MuzzleComponentType.Suppressor")))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+UNiagaraSystem* AWeapon::GetShotMuzzleParticle() const
+{
+	if(IsSuppressed())
+	{
+		return SuppressedShotMuzzleParticle;
+	}
+	return ShotMuzzleParticle;
+}
+
+void AWeapon::PlayReloadMontage()
+{
+	OnReload.Broadcast(CharacterReloadMontage);
+	SkeletalMeshComponent->GetAnimInstance()->Montage_Play(FirearmReloadMontage);
+}
+
+void AWeapon::OnRep_bIsReloading()
+{
+	if(bIsReloading)
+	{
+		PlayReloadMontage();
 	}
 }
 
@@ -365,6 +819,139 @@ bool AWeapon::IsEmpty() const
 bool AWeapon::IsFull() const
 {
 	return Ammo == MagCapacity;
+}
+
+void AWeapon::Server_Fire_Implementation(const FSKGMuzzleTransform& MuzzleTransform)
+{
+	AmmoRemaining -= 1;
+	if(AmmoRemaining <= 0)
+	{
+		StopFire();
+	}
+	else
+	{
+		ReplicateFireData(MuzzleTransform, true);
+	}
+}
+
+void AWeapon::FireLocal()
+{
+	TFunction<void()> Func = [this](){Fire();};
+	FireShot(GetMuzzleTransform(), Func);
+}
+
+void AWeapon::OnPickedup(USceneComponent* Component, FName Socket)
+{
+	bCanGetPickedup = false;
+	StopTickAndPhysics();
+
+	if(PickedUpData.Count > 254)
+	{
+		PickedUpData.SceneComponent = Component;
+		PickedUpData.Socket = Socket;
+		OnRep_PickedUpData();
+	}
+	else
+	{
+		FPickedUpRepData NewPickedUpData;
+		NewPickedUpData.Socket = Socket;
+		NewPickedUpData.SceneComponent = Component;
+		NewPickedUpData.Count = PickedUpData.Count + 1;
+		PickedUpData = NewPickedUpData;
+		OnRep_PickedUpData();
+	}
+}
+
+void AWeapon::StopTickAndPhysics()
+{
+	SkeletalMeshComponent->SetSimulatePhysics(false);
+	if(IsActorTickEnabled())
+	{
+		SetActorTickEnabled(false);
+	}
+}
+
+void AWeapon::StartTickAndPhysics()
+{
+	SkeletalMeshComponent->SetSimulatePhysics(true);
+	if(!IsActorTickEnabled())
+	{
+		SetActorTickEnabled(true);
+	}
+}
+
+void AWeapon::ReplicateDropPhysics()
+{
+	FVector_NetQuantize Location_NetQuantize(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
+	FVector_NetQuantize Rotation_NetQuantize(GetActorRotation().Roll, GetActorRotation().Pitch, GetActorRotation().Yaw);
+	DropPhysicsData.Location = Location_NetQuantize;
+	DropPhysicsData.Rotation = Rotation_NetQuantize;
+	OnRep_DropPhysicsData();
+	
+	if(GetVelocity().Equals(FVector::ZeroVector, 0.1f))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TActorDroppedPhysicsHandle);
+		bCanGetPickedup = true;
+	}
+}
+
+void AWeapon::SetActorAtTargetTransform()
+{
+	StopTickAndPhysics();
+	SetActorLocationAndRotation(DroppedActorTargetLocation, DroppedActorTargetRotator, false);
+}
+
+void AWeapon::Server_CycleFireMode_Implementation()
+{
+	CycleFireMode();
+}
+
+void AWeapon::Server_Reload_Implementation()
+{
+	if(FirearmProjectile)
+	{
+		bIsReloading = true;
+		OnRep_bIsReloading();
+	}
+}
+
+void AWeapon::Server_StopFire_Implementation()
+{
+	ReplicateFireData(FSKGMuzzleTransform(), false);
+}
+
+void AWeapon::OnRep_PickedUpData()
+{
+	StopTickAndPhysics();
+	GetWorld()->GetTimerManager().ClearTimer(TActorDroppedReplicationTimeLimitHandle);
+	if(PickedUpData.SceneComponent)
+	{
+		FAttachmentTransformRules AttachmentTransformRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget,
+			EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, true);
+		if(AttachToComponent(PickedUpData.SceneComponent, AttachmentTransformRules, PickedUpData.Socket))
+		{
+			GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Green, TEXT("Pickup Firearm successfully."));
+		}
+	}
+}
+
+void AWeapon::OnRep_DropPhysicsData()
+{
+	if(!HasAuthority())
+	{
+		GetWorld()->GetTimerManager().SetTimer(TActorDroppedReplicationTimeLimitHandle, this, &AWeapon::SetActorAtTargetTransform, 5.f, false);
+
+		DroppedActorTargetLocation = DropPhysicsData.Location;
+		DroppedActorTargetRotator = FRotator(DropPhysicsData.Rotation.Y, DropPhysicsData.Rotation.Z,DropPhysicsData.Rotation.X);
+		if(!IsActorTickEnabled())
+		{
+			StartTickAndPhysics();
+			for (AActor* Actor : AttachmentManagerComponent->GetAttachments())
+			{
+				Actor->SetActorEnableCollision(false);
+			}
+		}
+	}
 }
 
 FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
