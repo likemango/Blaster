@@ -340,7 +340,7 @@ private:
 	
 	UPROPERTY()
 	FTimerHandle TFullAutoHandle;
-	UPROPERTY(Replicated)
+	UPROPERTY(EditAnywhere, Category="Shooting|Ammo")
 	USKGPDAProjectile* FirearmProjectile;
 	UPROPERTY(Replicated)
 	FGameplayTag CurrentFireModeTag;
