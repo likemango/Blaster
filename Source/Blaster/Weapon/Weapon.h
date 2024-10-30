@@ -148,9 +148,8 @@ public:
 	virtual void Fire() override;
 	virtual void StopFire() override;
 	virtual bool CanFire() override;
-	virtual void Reload() override;
-	UFUNCTION(BlueprintCallable)
-	virtual void ReloadComplete() override;
+	virtual void Reload_Implementation() override;
+	virtual void ReloadComplete_Implementation() override;
 	virtual void CycleFireMode() override;
 	virtual EBlasterWeaponPriorityType GetWeaponPriorityType() override;
 	virtual void ActionFinishedCycling() override;

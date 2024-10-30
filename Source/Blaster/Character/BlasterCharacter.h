@@ -7,11 +7,12 @@
 #include "Blaster/BlasterTypes/TeamTypes.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "Blaster/Interface/InteractWithCrosshairsInterface.h"
-#include "Blaster/Interface/pawnInterface.h"
+#include "Blaster/Interface/PawnInterface.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
+struct FSKGProceduralPoseReplicationData;
 class USKGAttachmentManagerComponent;
 class USKGAnimInstance;
 class USKGShooterFrameworkAnimInstance;

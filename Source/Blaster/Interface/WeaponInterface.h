@@ -10,7 +10,7 @@
 
 
 // This class does not need to be modified.
-UINTERFACE(NotBlueprintable)
+UINTERFACE(BlueprintType)
 class UWeaponInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -29,9 +29,10 @@ public:
 	virtual void StopFire();
 	virtual bool CanFire();
 	
-	virtual void Reload();
-	UFUNCTION(BlueprintCallable)
-	virtual void ReloadComplete();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void Reload();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ReloadComplete();
 
 	virtual void CycleFireMode();
 	virtual EBlasterWeaponPriorityType GetWeaponPriorityType();

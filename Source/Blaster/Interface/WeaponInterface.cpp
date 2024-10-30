@@ -18,14 +18,6 @@ bool IWeaponInterface::CanFire()
 	return true;
 }
 
-void IWeaponInterface::Reload()
-{
-}
-
-void IWeaponInterface::ReloadComplete()
-{
-}
-
 void IWeaponInterface::CycleFireMode()
 {
 }

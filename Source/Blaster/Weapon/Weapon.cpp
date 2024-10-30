@@ -8,7 +8,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/Interface/AmmoInterface.h"
 #include "Blaster/Interface/HitInterface.h"
-#include "Blaster/Interface/pawnInterface.h"
+#include "Blaster/Interface/PawnInterface.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
@@ -351,7 +351,7 @@ bool AWeapon::CanFire()
 	return false;
 }
 
-void AWeapon::Reload()
+void AWeapon::Reload_Implementation()
 {
 	if(FirearmProjectile && !bIsReloading)
 	{
@@ -369,7 +369,7 @@ void AWeapon::Reload()
 	}
 }
 
-void AWeapon::ReloadComplete()
+void AWeapon::ReloadComplete_Implementation()
 {
 	bIsReloading = false;
 	if(HasAuthority() && AmmoSource)
