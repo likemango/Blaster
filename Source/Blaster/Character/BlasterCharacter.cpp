@@ -304,13 +304,15 @@ void ABlasterCharacter::PickUpActor(AActor* Actor)
 		FName SocketName;
 		if(AttachNonEquippedActor(Actor, SocketName))
 		{
-			Cast<IInteractInterface>(Actor)->OnPickup(GetMesh(), SocketName);
+			IInteractInterface::Execute_OnPickup(Actor, GetMesh(), SocketName);
+			// Cast<IInteractInterface>(Actor)->OnPickup(GetMesh(), SocketName);
 		}
 	}
 	else
 	{
 		AttachEquipActor(Actor);
-		Cast<IInteractInterface>(Actor)->OnPickup(GetMesh(), FirearmAttachSockName);
+		IInteractInterface::Execute_OnPickup(Actor, GetMesh(), FirearmAttachSockName);
+		// Cast<IInteractInterface>(Actor)->OnPickup(GetMesh(), FirearmAttachSockName);
 	}
 }
 
@@ -345,7 +347,7 @@ bool ABlasterCharacter::AttachNonEquippedActor(AActor* Actor, FName& OutSocketNa
 			if(FirearmOnBack)
 				return false;
 			FirearmOnBack = Actor;
-			OutSocketName = Cast<IInteractInterface>(Actor)->GetAttachSocket();
+			OutSocketName = IInteractInterface::Execute_GetAttachSocket(Actor);
 			FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
 			Actor->AttachToComponent(GetMesh(), AttachmentTransformRules, OutSocketName);
 			return true;
@@ -355,7 +357,7 @@ bool ABlasterCharacter::AttachNonEquippedActor(AActor* Actor, FName& OutSocketNa
 			if(PistolInHolster)
 				return false;
 			PistolInHolster = Actor;
-			OutSocketName = Cast<IInteractInterface>(Actor)->GetAttachSocket();
+			OutSocketName = IInteractInterface::Execute_GetAttachSocket(Actor);
 			FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
 			Actor->AttachToComponent(GetMesh(), AttachmentTransformRules, OutSocketName);
 			return true;
@@ -363,7 +365,7 @@ bool ABlasterCharacter::AttachNonEquippedActor(AActor* Actor, FName& OutSocketNa
 	}
 	else
 	{
-		OutSocketName = Cast<IInteractInterface>(Actor)->GetAttachSocket();
+		OutSocketName = IInteractInterface::Execute_GetAttachSocket(Actor);
 		FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
 		Actor->AttachToComponent(GetMesh(), AttachmentTransformRules, OutSocketName);
 		return true;
@@ -572,7 +574,7 @@ void ABlasterCharacter::UnequipComplete()
 		if(IInteractInterface* InteractInterface = Cast<IInteractInterface>(HeldActor))
 		{
 			FAttachmentTransformRules AttachmentTransformRules = CreateFirearmAttachmentRules();
-			HeldActor->AttachToComponent(GetMesh(), AttachmentTransformRules, InteractInterface->GetAttachSocket());
+			HeldActor->AttachToComponent(GetMesh(), AttachmentTransformRules, IInteractInterface::Execute_GetAttachSocket(HeldActor));
 			FirearmOnBack = HeldActor;
 		}
 	}
@@ -1309,7 +1311,7 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	// {
 		if (IInteractInterface* InteractWeapon = Cast<IInteractInterface>(OverlappingWeapon))
 		{
-			InteractWeapon->Interact(this);
+			IInteractInterface::Execute_Interact(OverlappingWeapon, this);
 			// Combat->EquipWeapon(OverlappingWeapon);
 		}
 		else if (ShouldSwapWeapons())

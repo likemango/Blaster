@@ -443,7 +443,7 @@ void AWeapon::OnPickup_Implementation(USceneComponent* Component, FName Socket)
 
 void AWeapon::OnDrop_Implementation()
 {
-	SkeletalMeshComponent->SetSimulatePhysics(true);
+	WeaponMesh->SetSimulatePhysics(true);
 	for (AActor* Actor: AttachmentManagerComponent->GetAttachments())
 	{
 		Actor->SetActorEnableCollision(false);
@@ -562,7 +562,7 @@ void AWeapon::PlayFireAnimation()
 	AnimationMontageData.Montage = CharacterShootMontage;
 	AnimationMontageData.Section = TEXT("None");
 	OnFired.Broadcast(ControlRotationMultiplier, RecoilLocationMultiplier, RecoilRotationMultiplier, AnimationMontageData);
-	SkeletalMeshComponent->GetAnimInstance()->Montage_Play(FirearmShootMontage);
+	WeaponMesh->GetAnimInstance()->Montage_Play(FirearmShootMontage);
 }
 
 void AWeapon::PlayShotEffects()
@@ -574,7 +574,7 @@ void AWeapon::PlayShotEffects()
 	if(UNiagaraSystem* NiagaraSystem = GetShotMuzzleParticle())
 	{
 		FTransform MuzzleTransform = FirearmComponent->GetMuzzleTransform();
-		UNiagaraFunctionLibrary::SpawnSystemAttached(NiagaraSystem, SkeletalMeshComponent, TEXT("None"), MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator(), EAttachLocation::KeepWorldPosition, false, true, ENCPoolMethod::AutoRelease, true);
+		UNiagaraFunctionLibrary::SpawnSystemAttached(NiagaraSystem, WeaponMesh, TEXT("None"), MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator(), EAttachLocation::KeepWorldPosition, false, true, ENCPoolMethod::AutoRelease, true);
 	}
 	FirearmComponent->ShotPerformed();
 }
@@ -618,7 +618,7 @@ UNiagaraSystem* AWeapon::GetShotMuzzleParticle() const
 void AWeapon::PlayReloadMontage()
 {
 	OnReload.Broadcast(CharacterReloadMontage);
-	SkeletalMeshComponent->GetAnimInstance()->Montage_Play(FirearmReloadMontage);
+	WeaponMesh->GetAnimInstance()->Montage_Play(FirearmReloadMontage);
 }
 
 void AWeapon::OnRep_bIsReloading()
@@ -864,7 +864,7 @@ void AWeapon::OnPickedup(USceneComponent* Component, FName Socket)
 
 void AWeapon::StopTickAndPhysics()
 {
-	SkeletalMeshComponent->SetSimulatePhysics(false);
+	WeaponMesh->SetSimulatePhysics(false);
 	if(IsActorTickEnabled())
 	{
 		SetActorTickEnabled(false);
@@ -873,7 +873,7 @@ void AWeapon::StopTickAndPhysics()
 
 void AWeapon::StartTickAndPhysics()
 {
-	SkeletalMeshComponent->SetSimulatePhysics(true);
+	WeaponMesh->SetSimulatePhysics(true);
 	if(!IsActorTickEnabled())
 	{
 		SetActorTickEnabled(true);

@@ -277,8 +277,8 @@ protected:
 	
 private:
 	// SKG components
-	UPROPERTY(VisibleAnywhere, Category="SKGComponents")
-	USkeletalMeshComponent* SkeletalMeshComponent;
+	// UPROPERTY(VisibleAnywhere, Category="SKGComponents")
+	// USkeletalMeshComponent* SkeletalMeshComponent;
 	UPROPERTY(VisibleAnywhere, Category="SKGComponents")
 	USKGFirearmComponent* FirearmComponent;
 	UPROPERTY(VisibleAnywhere, Category="SKGComponents")
